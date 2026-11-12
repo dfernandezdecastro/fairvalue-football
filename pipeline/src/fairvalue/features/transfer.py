@@ -42,9 +42,7 @@ def point_in_time_values(t: pd.DataFrame, valuations: pd.DataFrame) -> pd.DataFr
     pit = pd.merge_asof(left, v, left_on="date", right_on="mv_date", by="player_id",
                         direction="backward", allow_exact_matches=False)  # strictly before  # fmt: skip
     year_ago = left.assign(lookup=left.date - pd.Timedelta(days=365)).sort_values("lookup")
-    m12 = pd.merge_asof(
-        year_ago, v, left_on="lookup", right_on="mv_date", by="player_id", direction="backward"
-    )
+    m12 = pd.merge_asof(year_ago, v, left_on="lookup", right_on="mv_date", by="player_id", direction="backward")
     out = pit.rename(columns={"value_eur": "mv_pit_eur", "mv_date": "mv_pit_date"})[
         ["transfer_id", "mv_pit_eur", "mv_pit_date"]
     ]
@@ -54,9 +52,7 @@ def point_in_time_values(t: pd.DataFrame, valuations: pd.DataFrame) -> pd.DataFr
 
 
 def recent_form(t: pd.DataFrame, apps: pd.DataFrame, days: int = 365) -> pd.DataFrame:
-    a = apps[apps.player_id.isin(t.player_id)][
-        ["player_id", "date", "minutes", "started", "goals", "assists"]
-    ]
+    a = apps[apps.player_id.isin(t.player_id)][["player_id", "date", "minutes", "started", "goals", "assists"]]
     x = t[["transfer_id", "player_id", "date"]].merge(a.rename(columns={"date": "adate"}), on="player_id")
     x = x[(x.adate < x.date) & (x.adate >= x.date - pd.Timedelta(days=days))]
     g = x.groupby("transfer_id").agg(
@@ -134,9 +130,7 @@ def build(
 
     t = t.merge(players[["player_id", "date_of_birth", "sub_position"]], on="player_id", how="left")
     t["age"] = (t.date - t.date_of_birth).dt.days / 365.25
-    t["position_group"] = [
-        resolve_group(g, u)[0] for g, u in zip(tm_group(t.sub_position), t.us_position, strict=True)
-    ]
+    t["position_group"] = [resolve_group(g, u)[0] for g, u in zip(tm_group(t.sub_position), t.us_position, strict=True)]
 
     t["F1"] = t.move_type == "paid_transfer"
     t["F2"] = t.F1 & (t.to_competition_id.isin(BIG5) | t.from_competition_id.isin(BIG5))

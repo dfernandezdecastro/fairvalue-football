@@ -386,3 +386,35 @@ FEATURES: dict[str, Schema] = {
         "k_source": "str",
     },
 }
+
+# ---------------------------------------------------------------------------
+# Model outputs (written by fairvalue.models, loaded into Postgres in Step 6)
+# ---------------------------------------------------------------------------
+OUTPUTS: dict[str, Schema] = {
+    "piv_predictions": {
+        "model_tier": "str",
+        "model_kind": "str",
+        "player_id": "int",
+        "season": "int",
+        "competition_id": "str",
+        "train_through": "int",
+        "as_of_date": "date",
+        "minutes": "int",
+        "position_group": "str",
+        "data_tier": "str",
+        "market_index_eur": "float",
+        "estimate_eur": "float",
+        "lo80_eur": "float",
+        "hi80_eur": "float",
+        "lo95_eur": "float",
+        "hi95_eur": "float",
+        "calibration_group": "str",
+        "target_mv_eur": "float",
+        "target_date": "date",
+        "gap_log": "float",
+        "gap_label": "str",
+        "reliability": "str",
+        "reliability_reason": "str",
+        "drivers": "str",
+    },
+}

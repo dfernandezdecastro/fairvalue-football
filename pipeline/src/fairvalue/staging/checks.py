@@ -75,9 +75,7 @@ def run_checks() -> list[Check]:
         "understat_match_rate": round(float((m.confidence != "unmatched").mean()), 3),
         "understat_players_mapped": len(pm),
     }
-    checks = [
-        Check(k, v, actual[k], tolerance=0.001 if isinstance(v, float) else 0) for k, v in EXPECTED.items()
-    ]
+    checks = [Check(k, v, actual[k], tolerance=0.001 if isinstance(v, float) else 0) for k, v in EXPECTED.items()]
     if (DATA_DIR / "features" / "transfer_features.csv.gz").exists():
         tf = read_table("features", "transfer_features")
         feat_actual = {

@@ -5,6 +5,7 @@ stage             verify raw sources and build data/staging/
 check             reconcile staging with the published feasibility numbers
 quality           write reports/staging/data_quality.md
 features          build as-of features and performance profiles from staging
+train-piv         walk-forward train, evaluate and publish the performance-implied value model
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ import sys
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="fairvalue", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)  # fmt: skip
-    parser.add_argument("command", choices=["fetch-understat", "stage", "check", "quality", "features"])
+    parser.add_argument("command", choices=["fetch-understat", "stage", "check", "quality", "features", "train-piv"])
     args = parser.parse_args(argv)
 
     if args.command == "fetch-understat":
@@ -28,6 +29,12 @@ def main(argv: list[str] | None = None) -> int:
         from fairvalue.staging.build import run
 
         run()
+        return 0
+
+    if args.command == "train-piv":
+        from fairvalue.models.piv import run as run_piv
+
+        run_piv()
         return 0
 
     if args.command == "features":

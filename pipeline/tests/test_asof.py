@@ -29,9 +29,7 @@ def test_rows_before_excludes_same_day_and_future(valuations):
 
 def test_future_spike_does_not_change_filtered_rows(valuations):
     # Inject an absurd value after as_of: the as-of view must be identical.
-    spiked = pd.concat(
-        [valuations, pd.DataFrame({"player_id": [1], "date": ["2024-08-01"], "value": [10_000]})]
-    )
+    spiked = pd.concat([valuations, pd.DataFrame({"player_id": [1], "date": ["2024-08-01"], "value": [10_000]})])
     as_of = date(2024, 7, 1)
     pd.testing.assert_frame_equal(rows_before(valuations, "date", as_of), rows_before(spiked, "date", as_of))
 

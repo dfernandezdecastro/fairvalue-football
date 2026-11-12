@@ -29,6 +29,7 @@ cd pipeline && ../.venv/Scripts/python -m pytest
 .venv/Scripts/fairvalue check      # reconcile with published feasibility numbers
 .venv/Scripts/fairvalue quality    # write reports/staging/data_quality.md
 .venv/Scripts/fairvalue features   # as-of features + performance profiles -> data/features/
+.venv/Scripts/fairvalue train-piv  # walk-forward valuation model -> data/outputs/ + model card
 
 # Web app
 cd web && npm install && npm run dev                       # http://localhost:3000

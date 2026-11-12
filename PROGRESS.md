@@ -46,8 +46,18 @@
 - Sanity checks: Haaland/Kane 99–100th percentile npxG; Saka's nearest profiles are Son, Foden, Palmer, Salah.
 - Tests: 64 (synthetic fixtures). Decision log started: `docs/DECISIONS.md` (D1–D6).
 
+### 2026-11-12: Step 4 Performance-implied value model trained
+- `fairvalue train-piv` (≈4.5 min): two tiers (full: xG-level big five 2014–2024; basic: 14 leagues 2012–2025) × Ridge vs gradient boosting, walk-forward by season with inner hyperparameter selection on season s−1, group-wise split-conformal intervals (previous 3 seasons), reliability tiers, gap labels, SHAP driver groups. Outputs: `data/outputs/piv_predictions.csv.gz`, `piv_run.json`; model card `reports/models/piv_model_card.md`.
+- Two drift problems found and fixed (D8 same-market re-centring; D9 league market level). Final walk-forward results:
+  - Full tier (gradient boosting): MAE(log) 0.404, R² 0.82, median error 32%, 71% within ±50%; 80% coverage 80.9%.
+  - Basic tier (gradient boosting): MAE(log) 0.419, R² 0.87, median error 34%, 67% within ±50%; 80% coverage 78.9%.
+  - Naive baseline: median error 67% (full) / 85% (basic).
+- Sanity: Yamal MV €200M vs PIV €205M; Mbappé €180M vs €171M; Kane €75M vs €79M; all within range.
+- **Open issue:** league-season shocks the model can't foresee (e.g. LaLiga 2024/25 median residual −0.21) inflate gap labels in some league-seasons (27% of LaLiga 2024/25 flagged vs ~10% expected). Decision pending: make gap labels peer-relative (league-season) and recalibrate.
+- Tests: 84 (incl. leakage canary, conformal coverage, SHAP additivity, re-centring). Ruff line length raised to 120.
+
 ### Next
-- Step 4: Performance-implied value model. Target = log market value after season end, normalised by that summer's market level; walk-forward vintage training; Ridge vs gradient boosting; group-wise conformal intervals; SHAP drivers; model card. Needs `shap` as a new dependency (to justify in the step).
+- Decide on peer-relative gap labels, then Step 5: Expected Fee model + club audit + Hidden Gems backtest.
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).

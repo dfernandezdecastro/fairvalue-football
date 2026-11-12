@@ -51,9 +51,7 @@ def test_shrinkage_pulls_low_minute_players_more():
 
 
 def test_percentiles_only_for_eligible_and_within_peers():
-    ps = pd.concat(
-        [_season(), _season(seed=2).assign(position_group="CB", player_id=lambda d: d.player_id + 50)]
-    )
+    ps = pd.concat([_season(), _season(seed=2).assign(position_group="CB", player_id=lambda d: d.player_id + 50)])
     ps.loc[0, "minutes"] = 300  # below the 900-minute threshold
     p, _, _ = prof.build(ps)
     assert np.isnan(p.loc[0, "goals_p90_pct"])

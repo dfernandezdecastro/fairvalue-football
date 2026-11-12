@@ -23,8 +23,6 @@ BIG5 = {
     "FR1": "Ligue 1",
 }
 # Domestic leagues with full match history 2012/13-2025/26 in the Transfermarkt snapshot
-FULL_HISTORY_LEAGUES = frozenset(BIG5) | frozenset(
-    {"NL1", "PO1", "BE1", "TR1", "RU1", "SC1", "GR1", "DK1", "UKR1"}
-)
+FULL_HISTORY_LEAGUES = frozenset(BIG5) | frozenset({"NL1", "PO1", "BE1", "TR1", "RU1", "SC1", "GR1", "DK1", "UKR1"})
 
 MIN_MINUTES_FOR_ESTIMATE = 900

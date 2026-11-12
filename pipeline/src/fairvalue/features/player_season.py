@@ -27,9 +27,7 @@ def league_season_ends(games: pd.DataFrame) -> pd.DataFrame:
 
 def team_strength(games: pd.DataFrame) -> pd.DataFrame:
     """club_id, competition_id, season -> league games, points and goal difference per game."""
-    g = games[
-        (games.competition_type == "domestic_league") & games.home_goals.notna() & games.away_goals.notna()
-    ]
+    g = games[(games.competition_type == "domestic_league") & games.home_goals.notna() & games.away_goals.notna()]
     hg, ag = g.home_goals.astype(int), g.away_goals.astype(int)
     home = pd.DataFrame({"club_id": g.home_club_id, "competition_id": g.competition_id, "season": g.season,
                          "pts": np.select([hg > ag, hg == ag], [3, 1], 0), "gd": hg - ag})  # fmt: skip

@@ -14,9 +14,7 @@ def run(log=print) -> dict[str, int]:
     r = lambda name: read_table("staging", name)  # noqa: E731
     log("loading staging...")
     apps, games, players = r("appearances"), r("games"), r("players")
-    us_by_ps = player_season.understat_by_player_season(
-        r("understat_player_seasons"), r("understat_tm_matches")
-    )
+    us_by_ps = player_season.understat_by_player_season(r("understat_player_seasons"), r("understat_tm_matches"))
     counts = {}
 
     log("player-season features (as of each league's season end)...")
@@ -24,9 +22,7 @@ def run(log=print) -> dict[str, int]:
     counts["player_season_features"] = write_table(ps, "features", "player_season_features")
 
     log("transfer features (as of each transfer date)...")
-    tf = transfer.build(
-        r("transfers"), apps, games, r("valuations"), players, us_by_ps, r("understat_coverage")
-    )
+    tf = transfer.build(r("transfers"), apps, games, r("valuations"), players, us_by_ps, r("understat_coverage"))
     counts["transfer_features"] = write_table(tf, "features", "transfer_features")
 
     log("profiles: shrinkage, percentiles, similarity...")

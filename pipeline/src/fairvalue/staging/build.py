@@ -62,9 +62,7 @@ def run(out_dir: Path = STAGING_DIR, log=print) -> dict:
     )
 
     log("transfermarkt: transfers")
-    counts["transfers"] = write_staging(
-        core.stage_transfers(raw_transfers, cls, cutoff), "transfers", out_dir
-    )
+    counts["transfers"] = write_staging(core.stage_transfers(raw_transfers, cls, cutoff), "transfers", out_dir)
 
     log("understat: parse archive cache")
     us_raw, coverage = read_cache(pages)

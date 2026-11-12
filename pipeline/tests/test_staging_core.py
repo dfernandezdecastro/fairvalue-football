@@ -8,9 +8,7 @@ A, B, C = 1, 2, 3  # club ids
 
 
 def transfers(rows):
-    df = pd.DataFrame(
-        rows, columns=["player_id", "transfer_date", "from_club_id", "to_club_id", "transfer_fee"]
-    )
+    df = pd.DataFrame(rows, columns=["player_id", "transfer_date", "from_club_id", "to_club_id", "transfer_fee"])
     df["transfer_date"] = pd.to_datetime(df.transfer_date)
     df["from_club_name"] = df.from_club_id.map(str)
     df["to_club_name"] = df.to_club_id.map(str)
@@ -50,9 +48,7 @@ def test_future_rows_inform_loans_but_are_dropped():
 
 def test_leagues_window_and_ids():
     s = core.stage_transfers(
-        transfers(
-            [(1, "2020-08-01", A, B, 1e6), (2, "2021-01-10", B, C, 2e6), (3, "2020-07-15", C, A, None)]
-        ),
+        transfers([(1, "2020-08-01", A, B, 1e6), (2, "2021-01-10", B, C, 2e6), (3, "2020-07-15", C, A, None)]),
         CLS,
         CUTOFF,
     )

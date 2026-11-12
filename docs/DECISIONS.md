@@ -31,3 +31,23 @@ Short records of non-obvious technical decisions: context, decision, consequence
 - **Context:** per-90 rates from few minutes are noisy. A Gamma-Poisson method-of-moments estimate of the prior strength k works for counts, but treats xG-type metrics (sums of probabilities, much less noisy) as mostly noise. First run: Haaland 2023/24 npxG 0.89 → 0.61 per 90.
 - **Decision:** estimate k directly for counts (goals, assists, shots, key passes). npxG borrows k from shots; xA, xGChain and xGBuildup borrow it from key passes, since their noise comes mainly from how many chances occur. k is clamped to 90–3,600 minutes.
 - **Consequence:** Haaland 0.89 → 0.81. Big-five median prior strength ≈ 750 minutes for chance metrics, 2,450 for goals, at the 3,600 cap for assists (assist counts are mostly noise at season scale).
+
+## D7. PIV is a same-market (cross-sectional) valuation, not a forecast (Step 4)
+- **Context:** the target (market value after the season) must be comparable across years despite heavy market inflation.
+- **Decision:** model log market value relative to that summer's market index (median value of eligible big-five outfield players). The estimate is converted back to euros with the same summer's index.
+- **Consequence:** the PIV answers "what does this market typically pay for this profile?", which is what the valuation gap needs. Using the same-summer index isn't leakage, because PIV is compared with market values from that same summer. Features only use data up to season end.
+
+## D8. Same-market re-centring of predictions (Step 4)
+- **Context:** the first walk-forward run over-predicted (bias −0.11 log in the full tier). The median relative value is 0 every season by construction, but the mean fell from +0.16 (2012) to −0.10 (2024): the market became more unequal, so models trained on earlier seasons over-value the typical player.
+- **Decision:** each season, shift predictions so the median prediction over big-five rows is 0, the known median of the target by definition. It uses only that season's predictions (features), never its targets, and is applied identically during hyperparameter selection.
+- **Consequence:** full-tier bias −0.11 → +0.01 and MAE 0.422 → 0.408. Tested with a synthetic "market gets more unequal" scenario.
+
+## D9. Point-in-time league market level feature (Step 4)
+- **Context:** after D8, the basic tier still over-predicted non-big-five leagues by ~30% (median log residual −0.36). Leagues drift strongly against the big five (Portugal −0.66 → −2.24 from 2013 to 2019; Russia fell after 2022), so league coefficients learned from earlier seasons go stale.
+- **Decision:** add `league_mv_level`: the league's median market value dated strictly before season end, relative to the big five. It's an aggregate over hundreds of players, so it isn't circular for an individual.
+- **Consequence:** basic-tier MAE 0.485 → 0.419, median error 41% → 34%, bias −0.20 → −0.04; non-big-five bias −0.36 → −0.07.
+
+## D10. Gradient boosting chosen for both tiers, with SHAP explanations (Step 4)
+- **Context:** the selection rule required boosting to beat Ridge by ≥ 5% walk-forward MAE without worse interval calibration.
+- **Decision:** boosting passed in both tiers (full 0.404 vs 0.428; basic 0.419 vs 0.455), with calibration as good as Ridge's. Explanations use SHAP (TreeExplainer), whose contributions add up exactly to each prediction (tested). This adds the `shap` dependency.
+- **Consequence:** less transparent than Ridge coefficients, mitigated by per-prediction driver groups. Ridge stays in the evaluation as the reference.

@@ -7,9 +7,9 @@ from pathlib import Path
 import pandas as pd
 
 from fairvalue.config import DATA_DIR
-from fairvalue.ingest.schemas import FEATURES, STAGING, enforce
+from fairvalue.ingest.schemas import FEATURES, OUTPUTS, STAGING, enforce
 
-LAYERS = {"staging": STAGING, "features": FEATURES}
+LAYERS = {"staging": STAGING, "features": FEATURES, "outputs": OUTPUTS}
 
 
 def _path(layer: str, name: str, base: Path) -> Path:
@@ -27,6 +27,6 @@ def write_table(df: pd.DataFrame, layer: str, name: str, base: Path = DATA_DIR) 
 def read_table(layer: str, name: str, base: Path = DATA_DIR) -> pd.DataFrame:
     path = _path(layer, name, base)
     if not path.exists():
-        cmd = "stage" if layer == "staging" else "features"
+        cmd = {"staging": "stage", "features": "features"}.get(layer, "train-piv")
         raise FileNotFoundError(f"{path} missing. Run: fairvalue {cmd}")
     return enforce(pd.read_csv(path, low_memory=False), LAYERS[layer][name], f"{layer}.{name}")

@@ -71,11 +71,7 @@ def read_cache(pages: list[Path] | None = None) -> tuple[pd.DataFrame, pd.DataFr
         df["league"], df["season"], df["snapshot"] = league, season, ts
         frames.append(df)
         found.add((league, season))
-        cov.append(
-            dict(
-                league=league, season=season, status=snapshot_status(season, ts), snapshot=ts, players=len(df)
-            )
-        )
+        cov.append(dict(league=league, season=season, status=snapshot_status(season, ts), snapshot=ts, players=len(df)))
     for league in LEAGUES:
         for season in SEASONS:
             if (league, season) not in found:
@@ -123,17 +119,11 @@ def fetch_cache(cache: Path = UNDERSTAT_CACHE, pause: float = 1.5) -> None:  # p
 
             final = sorted(row[1] for row in rows if row[1] >= f"{season + 1}0601" and size_ok(row))
             near = sorted(
-                (
-                    row[1]
-                    for row in rows
-                    if f"{season + 1}0510" <= row[1] < f"{season + 1}0601" and size_ok(row)
-                ),
+                (row[1] for row in rows if f"{season + 1}0510" <= row[1] < f"{season + 1}0601" and size_ok(row)),
                 reverse=True,
             )
             for ts in (final + near)[:15]:
-                page = get(
-                    f"https://web.archive.org/web/{ts}id_/https://understat.com/league/{league}/{season}"
-                )
+                page = get(f"https://web.archive.org/web/{ts}id_/https://understat.com/league/{league}/{season}")
                 time.sleep(pause)
                 if page is not None and page.status_code == 200:
                     players = parse_players(page.text)

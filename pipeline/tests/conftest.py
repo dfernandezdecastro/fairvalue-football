@@ -43,9 +43,7 @@ def apps(games):
 
 @pytest.fixture
 def players():
-    return pd.DataFrame(
-        {"player_id": [1], "date_of_birth": [D("1995-07-01")], "sub_position": ["Centre-Forward"]}
-    )
+    return pd.DataFrame({"player_id": [1], "date_of_birth": [D("1995-07-01")], "sub_position": ["Centre-Forward"]})
 
 
 @pytest.fixture

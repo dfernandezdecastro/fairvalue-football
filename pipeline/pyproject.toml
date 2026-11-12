@@ -13,6 +13,7 @@ dependencies = [
     "scikit-learn>=1.6",
     "requests>=2.32",
     "tabulate>=0.9",
+    "shap>=0.46",  # per-prediction explanations for tree models (Step 4, see docs/DECISIONS.md D10)
 ]
 
 [project.scripts]
@@ -29,7 +30,7 @@ testpaths = ["tests"]
 addopts = "-q"
 
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
