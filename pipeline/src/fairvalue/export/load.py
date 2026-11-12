@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import io
 import os
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -41,6 +42,11 @@ def require(name: str) -> str:
     if not value or "YOUR" in value.upper():
         raise SystemExit(f"{name} is not set. Copy .env.example to .env and fill it in (see docs/SUPABASE_SETUP.md).")
     return value
+
+
+def project_url() -> str:
+    """SUPABASE_URL without a trailing /rest/v1 (people often copy the API endpoint instead of the project URL)."""
+    return re.sub(r"/rest/v1/?$", "", require("SUPABASE_URL").rstrip("/"))
 
 
 def connect():
@@ -117,7 +123,7 @@ def check_public_access(log=print) -> bool:
     """As an anonymous visitor (anon key): reads must work, writes must be refused."""
     import requests
 
-    url, key = require("SUPABASE_URL").rstrip("/"), require("SUPABASE_ANON_KEY")
+    url, key = project_url(), require("SUPABASE_ANON_KEY")
     if key.startswith("sb_secret_"):
         log("  SUPABASE_ANON_KEY is a SECRET key. Use the publishable (or legacy anon) key instead.")
         return False

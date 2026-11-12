@@ -95,3 +95,11 @@ def test_every_table_has_a_primary_key_matching_the_sql():
             assert re.search(rf"\b{cols[0]}\s+\w+.*primary key", block), table
         else:
             assert f"primary key ({', '.join(cols)})" in block, table
+
+
+@pytest.mark.parametrize(
+    "value", ["https://abc.supabase.co", "https://abc.supabase.co/", "https://abc.supabase.co/rest/v1/"]
+)
+def test_project_url_normalised(monkeypatch, value):
+    monkeypatch.setattr(load, "require", lambda name: value)
+    assert load.project_url() == "https://abc.supabase.co"

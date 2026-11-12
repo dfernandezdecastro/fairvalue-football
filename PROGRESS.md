@@ -68,10 +68,13 @@
 - `supabase/migrations/20261112000001_init.sql`: 11 tables, 3 views (security_invoker), trigram search index, RLS read-only policies, R3 check constraints (no estimate without its range).
 - `fairvalue publish | db-load | db-check | gen-types`: published tables built with contracts, licensing guard and referential checks (D15); single-transaction load; anonymous read/write verification; TS types from the live schema.
 - Setup guide `docs/SUPABASE_SETUP.md`; `.env.example` and `web/.env.example` (secrets git-ignored).
-- **Pending (user):** create the Supabase project and fill `.env`, then run db-load / db-check / gen-types.
+- Loaded into Supabase (EU, Paris): 11 tables, 122 MB of the 500 MB free tier, row counts verified in the load transaction.
+- `db-check` passes as an anonymous visitor: reads 200; insert refused (401); delete removed nothing.
+- Fixes during setup: club audit grouped by club id (74 clubs with 2+ spellings); primary-key checks before loading; db-check no longer mistakes a rejected key's 401s for "writes refused"; project URL normalised when it includes /rest/v1.
+- `web/lib/db/types.ts` generated from the live schema. Tests: 123.
 
 ### Next
-- Finish Step 6 (load + verify + types), then Step 7: design system and app shell.
+- Step 7: design system and app shell (tokens, domain components such as EstimateRange / ReliabilityBadge / GapLabel / PercentileBar / InsufficientData, layout, ⌘K search, loading/empty/error states).
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).
