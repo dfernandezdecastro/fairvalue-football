@@ -38,10 +38,10 @@ def _conformal_quantile(r: np.ndarray, q: float) -> float:
     return float(np.quantile(r, level, method="higher" if q > 0.5 else "lower"))
 
 
-def calibrate(residuals: pd.DataFrame) -> dict[tuple, dict[str, float]]:
+def calibrate(residuals: pd.DataFrame, hierarchy: list[list[str]] | None = None) -> dict[tuple, dict[str, float]]:
     """residuals: columns minutes_band, line, r -> {(level_keys...): {q: value}}."""
     table: dict[tuple, dict[str, float]] = {}
-    for keys in GROUP_HIERARCHY:
+    for keys in hierarchy or GROUP_HIERARCHY:
         if not set(keys) <= set(residuals.columns):
             continue
         groups = residuals.groupby(keys) if keys else [((), residuals)]
@@ -55,14 +55,14 @@ def calibrate(residuals: pd.DataFrame) -> dict[tuple, dict[str, float]]:
     return table
 
 
-def apply_intervals(rows: pd.DataFrame, table: dict) -> pd.DataFrame:
+def apply_intervals(rows: pd.DataFrame, table: dict, hierarchy: list[list[str]] | None = None) -> pd.DataFrame:
     """Adds q columns + calibration_group to rows (needs minutes_band, line, y_hat)."""
     out = rows.copy()
     for col in ["80_lo", "80_hi", "95_lo", "95_hi"]:
         out[col] = np.nan
     out["calibration_group"] = None
     for idx, row in out.iterrows():
-        for keys in GROUP_HIERARCHY:
+        for keys in hierarchy or GROUP_HIERARCHY:
             if not set(keys) <= set(row.index):
                 continue
             k = tuple(row[c] for c in keys)

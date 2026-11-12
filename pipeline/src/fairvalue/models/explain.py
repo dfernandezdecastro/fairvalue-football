@@ -36,13 +36,15 @@ def _source_feature(transformed_name: str) -> str:
     """'num__age' -> 'age'; 'missingindicator_prev_xa_p90' -> 'prev_xa_p90'; 'cat__competition_id_GB1' -> ..."""
     name = transformed_name.split("__", 1)[-1]
     name = name.removeprefix("missingindicator_")
-    for cat in ("competition_id", "position_group"):
+    for cat in ("competition_id", "position_group", "to_lg", "from_lg", "window"):
         if name.startswith(cat):
             return cat
     return name
 
 
-def contributions(model: Pipeline, X: pd.DataFrame) -> tuple[pd.DataFrame, float]:
+def contributions(
+    model: Pipeline, X: pd.DataFrame, groups: dict[str, list[str]] | None = None
+) -> tuple[pd.DataFrame, float]:
     """-> (rows x driver-group log contributions, base value)."""
     pre, est = model.named_steps["pre"], model.named_steps["model"]
     Xt = pre.transform(X)
@@ -59,8 +61,9 @@ def contributions(model: Pipeline, X: pd.DataFrame) -> tuple[pd.DataFrame, float
         raw = explainer.shap_values(np.asarray(Xt, dtype=float))
         base = float(np.ravel(explainer.expected_value)[0])
     per_feature = pd.DataFrame(raw, columns=names, index=X.index)
-    groups = per_feature.T.groupby(lambda n: _FEATURE_TO_GROUP.get(_source_feature(n), "Other")).sum().T
-    return groups, base
+    mapping = {f: g for g, fs in groups.items() for f in fs} if groups else _FEATURE_TO_GROUP
+    grouped = per_feature.T.groupby(lambda n: mapping.get(_source_feature(n), "Other")).sum().T
+    return grouped, base
 
 
 def drivers_json(row: pd.Series, top: int = 6) -> str:

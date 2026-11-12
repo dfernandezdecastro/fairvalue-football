@@ -30,6 +30,7 @@ cd pipeline && ../.venv/Scripts/python -m pytest
 .venv/Scripts/fairvalue quality    # write reports/staging/data_quality.md
 .venv/Scripts/fairvalue features   # as-of features + performance profiles -> data/features/
 .venv/Scripts/fairvalue train-piv  # walk-forward valuation model -> data/outputs/ + model card
+.venv/Scripts/fairvalue train-fee  # expected fee, club audit, hidden gems backtest -> data/outputs/ + reports
 
 # Web app
 cd web && npm install && npm run dev                       # http://localhost:3000

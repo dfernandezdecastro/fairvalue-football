@@ -57,8 +57,15 @@
 - Known caveat surfaced: top 2024/25 flags include Athletic Club players (Basque-only policy, rarely sold); added to the model card as an example of unobserved club conventions.
 - Tests: 84 (incl. leakage canary, conformal coverage, SHAP additivity, re-centring). Ruff line length raised to 120.
 
+### 2026-11-12: Step 5 Expected Fee, club audit, Hidden Gems backtest done
+- `fairvalue train-fee` (≈1 min, after train-piv): `data/outputs/fee_predictions.csv.gz` (12,520 assessed of 14,516 paid transfers with a fresh market value), `club_audit.csv.gz`, `fee_run.json`; reports `reports/models/expected_fee_model_card.md` and `hidden_gems_backtest.md`.
+- Expected Fee: Ridge (boosting 4.4% better, below the 5% bar). Typical error 44% vs 50% for "fee = market value"; 80% coverage 81.5%, ranges ×9 wide.
+- Club audit with bootstrap ranges; highest big-five ratios Athletic Club, Ipswich, Newcastle; largest unusual premiums are the 2023 Saudi moves.
+- Backtest: potential undervaluation +7.9% vs peers over 12 months (80% CI 6.5–11.1), strong signal +13.9%, market premium −3.8%; consistent in all 10 seasons.
+- Decisions D12–D14. Tests: 100 passing (13 new for Step 5).
+
 ### Next
-- Step 5: Expected Fee model + club audit + Hidden Gems backtest.
+- Step 6: Supabase database (migrations, RLS read-only, loader for derived outputs only, generated TypeScript types).
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).
