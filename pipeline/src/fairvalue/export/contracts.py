@@ -64,6 +64,15 @@ PUBLISH: dict[str, Schema] = {
     "app_meta": {"key": "str", "value": "str"},
 }  # fmt: skip
 
+PRIMARY_KEYS = {
+    "competitions": ["id"], "clubs": ["id"], "players": ["id"], "model_runs": ["id"],
+    "player_seasons": ["player_id", "season", "competition_id"],
+    "similar_players": ["player_id", "season", "competition_id", "rank"],
+    "piv_estimates": ["player_id", "season", "competition_id", "model_tier"], "transfers": ["id"],
+    "club_audit": ["club_id", "period"], "data_coverage": ["source", "competition_id", "season"],
+    "app_meta": ["key"],
+}  # fmt: skip
+
 # Load order respects foreign keys; truncation runs in reverse.
 LOAD_ORDER = [
     "competitions", "clubs", "players", "model_runs", "player_seasons", "similar_players", "piv_estimates",

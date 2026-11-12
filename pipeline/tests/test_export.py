@@ -77,3 +77,21 @@ def test_load_env_and_placeholder_detection(tmp_path, monkeypatch):
     monkeypatch.setattr(load, "load_env", lambda path=None: None)
     with pytest.raises(SystemExit, match="SUPABASE_DB_URL is not set"):
         load.require("SUPABASE_DB_URL")  # still the template placeholder
+
+
+def test_primary_key_check_catches_duplicates():
+    t = _minimal_tables()
+    publish.check_primary_keys(t)
+    t["club_audit"] = pd.DataFrame({"club_id": [7, 7], "period": ["all", "all"]})
+    with pytest.raises(ValueError, match="club_audit"):
+        publish.check_primary_keys(t)
+
+
+def test_every_table_has_a_primary_key_matching_the_sql():
+    assert set(contracts.PRIMARY_KEYS) == set(contracts.PUBLISH)
+    for table, cols in contracts.PRIMARY_KEYS.items():
+        block = _table_block(table)
+        if len(cols) == 1:
+            assert re.search(rf"\b{cols[0]}\s+\w+.*primary key", block), table
+        else:
+            assert f"primary key ({', '.join(cols)})" in block, table

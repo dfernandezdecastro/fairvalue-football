@@ -118,18 +118,26 @@ def check_public_access(log=print) -> bool:
     import requests
 
     url, key = require("SUPABASE_URL").rstrip("/"), require("SUPABASE_ANON_KEY")
+    if key.startswith("sb_secret_"):
+        log("  SUPABASE_ANON_KEY is a SECRET key. Use the publishable (or legacy anon) key instead.")
+        return False
     # Legacy anon keys are JWTs (also sent as Bearer); new publishable keys (sb_publishable_...) go in apikey only.
     h = {"apikey": key} if key.startswith("sb_publishable_") else {"apikey": key, "Authorization": f"Bearer {key}"}
     ok = True
     read = requests.get(f"{url}/rest/v1/competitions?select=id&limit=1", headers=h, timeout=30)
     log(f"  anonymous read competitions: HTTP {read.status_code} {'OK' if read.ok and read.json() else 'FAIL'}")
+    if read.status_code == 401:
+        # A rejected key makes every request fail with 401, including writes, which would then look "refused".
+        log("  the API key itself was rejected, so write protection can't be verified. Check SUPABASE_ANON_KEY "
+            "(it should start with sb_publishable_ or eyJ).")  # fmt: skip
+        return False
     ok &= read.ok and bool(read.json())
     view = requests.get(f"{url}/rest/v1/v_player_season?select=player_name,season&limit=1", headers=h, timeout=30)
     log(f"  anonymous read v_player_season: HTTP {view.status_code} {'OK' if view.ok else 'FAIL'}")
     ok &= view.ok
     write = requests.post(f"{url}/rest/v1/app_meta", headers=h | {"Content-Type": "application/json"},
                           json={"key": "intrusion-test", "value": {}}, timeout=30)  # fmt: skip
-    refused = write.status_code in (401, 403)
+    refused = write.status_code in (401, 403)  # with a valid key, RLS refusal is 401/403 (no insert policy)
     log(f"  anonymous insert app_meta: HTTP {write.status_code} {'refused (good)' if refused else 'NOT REFUSED'}")
     ok &= refused
     prefer = h | {"Prefer": "return=representation"}

@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 from fairvalue.config import DATA_DIR, FULL_HISTORY_LEAGUES, TRANSFERMARKT_CUTOFF, UNDERSTAT_LAST_SEASON
-from fairvalue.export.contracts import FORBIDDEN_COLUMNS, PUBLISH, RATE
+from fairvalue.export.contracts import FORBIDDEN_COLUMNS, PRIMARY_KEYS, PUBLISH, RATE
 from fairvalue.ingest.schemas import enforce
 from fairvalue.io import read_table
 
@@ -117,8 +117,17 @@ def build_tables(base=DATA_DIR) -> dict[str, pd.DataFrame]:
     }  # fmt: skip
     tables = {name: enforce(df, PUBLISH[name], f"publish.{name}") for name, df in raw.items()}
     check_licensing(tables)
+    check_primary_keys(tables)
     check_referential_integrity(tables)
     return tables
+
+
+def check_primary_keys(tables: dict[str, pd.DataFrame]) -> None:
+    """Fail before touching the database if a primary key would be duplicated."""
+    dupes = {name: int(df.duplicated(PRIMARY_KEYS[name]).sum()) for name, df in tables.items()}
+    dupes = {k: v for k, v in dupes.items() if v}
+    if dupes:
+        raise ValueError(f"duplicate primary keys: {dupes}")
 
 
 def check_licensing(tables: dict[str, pd.DataFrame]) -> None:

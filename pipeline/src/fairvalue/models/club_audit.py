@@ -52,7 +52,8 @@ def build(fees: pd.DataFrame, valuations: pd.DataFrame, seed: int = 0) -> pd.Dat
     rows = []
     for period, (lo, hi) in periods.items():
         p = f[(f.season >= lo) & (f.season <= hi)]
-        for (club_id, club_name), g in p.groupby(["to_club_id", "to_club_name"]):
+        for club_id, g in p.groupby("to_club_id"):  # by id only: 74 clubs appear under 2+ spellings
+            club_name = g.to_club_name.mode().iat[0]
             n = len(g)
             ratio = g.fee_eur.sum() / g.expected_fee_eur.sum()
             r_lo, r_hi = bootstrap_ratio(g.fee_eur.to_numpy(), g.expected_fee_eur.to_numpy(), rng) if n >= 2 else (
