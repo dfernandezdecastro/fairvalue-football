@@ -40,6 +40,35 @@ def _coverage_table(tier: dict) -> str:
     return head + "\n\n" + g.rename_axis("minutes band / line").to_markdown()
 
 
+def _label_rates(pub: pd.DataFrame) -> str:
+    under = {"Potential undervaluation", "Strong signal of potential undervaluation"}
+    rows = []
+    for tier, g in pub[pub.gap_label.notna()].groupby("model_tier"):
+        latest = g[g.season == g.season.max()]
+        rates = latest.groupby("competition_id").gap_label.apply(lambda s: s.isin(under).mean())
+        rows.append(
+            (rates * 100).round(1).rename(f"{tier} {int(latest.season.max())}/{str(int(latest.season.max()) + 1)[-2:]}")
+        )
+    return pd.concat(rows, axis=1).fillna("–").astype(str).add("%").replace("–%", "–").to_markdown()
+
+
+def _league_coverage(preds: pd.DataFrame) -> tuple[str, list[str]]:
+    q = preds[preds.peer_lo80_eur.notna() & preds.target_mv_eur.notna()]
+    below = q.target_mv_eur < q.peer_lo80_eur
+    above = q.target_mv_eur > q.peer_hi80_eur
+    t = (
+        q.assign(below=below, above=above)
+        .groupby(["model_tier", "competition_id"])
+        .agg(n=("below", "size"), below=("below", "mean"), above=("above", "mean"))
+    )
+    t["inside80"] = 1 - t.below - t.above
+    weak = [f"{c} ({tier}: {v:.1%} inside)" for (tier, c), v in t.inside80.items() if v < 0.75]
+    shown = t.copy()
+    for c in ["below", "above", "inside80"]:
+        shown[c] = (shown[c] * 100).round(1).astype(str) + "%"
+    return shown.to_markdown(), weak
+
+
 def write_report() -> str:
     run = json.loads((DATA_DIR / "outputs" / "piv_run.json").read_text(encoding="utf-8"))
     preds = read_table("outputs", "piv_predictions")
@@ -93,6 +122,7 @@ def write_report() -> str:
             "",
         ]
     pub = preds[preds.reliability != "Insufficient"]
+    league_table, weak = _league_coverage(pub)
     rel = preds.groupby(["model_tier", "reliability"]).size().unstack(fill_value=0)
     labels = pub.groupby(["model_tier", "gap_label"]).size().unstack(fill_value=0)
     parts += [
@@ -102,10 +132,36 @@ def write_report() -> str:
         "",
         rel.to_markdown(),
         "",
-        "Gap labels (actual market value vs the PIV range). By construction about 10% of players fall below "
-        "and 10% above the 80% range each season, so a label marks the most unusual cases, not a verdict:",
+        "### Valuation gaps are peer-relative (decision D11)",
+        "",
+        "Gap labels compare a player's market value with the range for **same-league peers in the same "
+        "summer**: the model estimate shifted by that league-season's median residual, with intervals "
+        "calibrated on earlier seasons' peer-centred errors. League-wide market moves therefore don't show up "
+        "as individual undervaluation. Accuracy metrics above are unaffected (they use the model estimate).",
+        "",
+        "Peer-relative interval coverage: "
+        + ", ".join(
+            f"{t} tier 80% **{run['tiers'][t]['peer_coverage']['coverage80']:.1%}** / "
+            f"95% **{run['tiers'][t]['peer_coverage']['coverage95']:.1%}** "
+            f"(median width ×{run['tiers'][t]['peer_coverage']['median_width80_ratio']})"
+            for t in ("full", "basic")
+        )
+        + ".",
+        "",
+        "By construction about 10% of players fall below and 10% above the 80% range, so a label marks the "
+        "most unusual cases in their market, not a verdict:",
         "",
         labels.to_markdown(),
+        "",
+        "Share of players labelled potential undervaluation (either strength) by league, latest season of "
+        "each tier. Expect ≈ 10% everywhere:",
+        "",
+        _label_rates(pub),
+        "",
+        "Single seasons vary by a few points per league (normal sampling and market noise). The fairer check "
+        "is coverage per league across all walk-forward seasons (peer-relative 80% range):",
+        "",
+        league_table,
         "",
         "## Known limitations",
         "",
@@ -116,6 +172,14 @@ def write_report() -> str:
         "- Contract length, injuries and off-pitch factors are unobserved and sit in the gap.",
         "- Position is today's label unless that season's Understat usage contradicts it.",
         "- Understat is missing for 10 big-five league-seasons and for 2025/26; those rows use the basic tier.",
+        *(
+            [f"- Intervals under-cover in: {', '.join(weak)}. Treat gap labels there with extra caution."]
+            if weak
+            else []
+        ),
+        "- Club-specific market conventions aren't modelled. Example: Athletic Club's Basque-only policy means "
+        "its players rarely move, which plausibly depresses their market values; they appear as 'potential "
+        "undervaluation' for reasons unrelated to performance.",
         "",
     ]
     REPORT.parent.mkdir(parents=True, exist_ok=True)

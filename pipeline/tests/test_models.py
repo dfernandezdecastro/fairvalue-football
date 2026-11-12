@@ -161,3 +161,46 @@ def test_league_market_level_uses_only_values_before_season_end():
     })  # fmt: skip
     lvl = dataset.league_market_level(df, v).set_index("competition_id").league_mv_level
     assert lvl["GB1"] == pytest.approx(0.0) and lvl["NL1"] == pytest.approx(np.log(0.1))
+
+
+# ----------------------------------------------------------------------------- peer-relative gaps (D11)
+def test_peer_shift_is_league_season_median_and_skips_small_groups():
+    rows = pd.DataFrame({
+        "season": [2024] * 40 + [2024] * 5,
+        "competition_id": ["ES1"] * 40 + ["DK1"] * 5,
+        "r": list(np.linspace(-1.0, 0.6, 40)) + [5.0] * 5,
+    })  # fmt: skip
+    s = uncertainty.peer_shift(rows)
+    assert s.iloc[0] == pytest.approx(np.median(np.linspace(-1.0, 0.6, 40)))
+    assert (s.iloc[40:] == 0.0).all()  # 5 players: too few peers for a reliable shift
+
+
+def test_peer_relative_labels_absorb_a_league_wide_shock():
+    from fairvalue.models.piv import _calibrated
+
+    df = synthetic(seasons=range(2014, 2022), n=600)
+    df["competition_id"] = np.where(np.arange(len(df)) % 2 == 0, "ES1", "GB1")
+    df["minutes_band"], df["line"] = "1800+", "ATT"
+    shock = (df.season == 2021) & (df.competition_id == "ES1")
+    df.loc[shock, "y"] -= 0.8  # league-wide drop nobody could foresee
+    res = training.walk_forward(df, "ridge", NUM, CAT)
+    for peer, max_rate in [(False, 1.0), (True, 0.16)]:
+        cal = _calibrated(df, res, peer=peer)
+        es = cal[(cal.season == 2021) & (df.loc[cal.index, "competition_id"] == "ES1")]
+        below = (es.y < es["80_lo"]).mean()
+        if peer:
+            assert below <= max_rate  # back to ~10%
+        else:
+            assert below > 0.5  # whole-market view flags most of the league
+
+
+def test_league_specific_widths_when_history_allows():
+    rng = np.random.default_rng(3)
+    cal = pd.concat([
+        pd.DataFrame({"competition_id": "GB1", "line": "ATT", "minutes_band": "1800+", "r": rng.normal(0, 0.3, 400)}),
+        pd.DataFrame({"competition_id": "SC1", "line": "ATT", "minutes_band": "1800+", "r": rng.normal(0, 1.2, 400)}),
+    ])  # fmt: skip
+    rows = pd.DataFrame({"competition_id": ["GB1", "SC1"], "line": "ATT", "minutes_band": "1800+", "y_hat": 0.0})
+    out = uncertainty.apply_intervals(rows, uncertainty.calibrate(cal)).set_index("competition_id")
+    width = out["80_hi"] - out["80_lo"]
+    assert width["SC1"] > 3 * width["GB1"] and out.loc["SC1", "calibration_group"] == "SC1/ATT"

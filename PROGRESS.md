@@ -53,11 +53,12 @@
   - Basic tier (gradient boosting): MAE(log) 0.419, R² 0.87, median error 34%, 67% within ±50%; 80% coverage 78.9%.
   - Naive baseline: median error 67% (full) / 85% (basic).
 - Sanity: Yamal MV €200M vs PIV €205M; Mbappé €180M vs €171M; Kane €75M vs €79M; all within range.
-- **Open issue:** league-season shocks the model can't foresee (e.g. LaLiga 2024/25 median residual −0.21) inflate gap labels in some league-seasons (27% of LaLiga 2024/25 flagged vs ~10% expected). Decision pending: make gap labels peer-relative (league-season) and recalibrate.
+- League-season shocks inflated gap labels (27% of LaLiga 2024/25 flagged). **User chose peer-relative gaps** (D11): gaps vs same-league peers in the same summer, with league-specific interval widths. Peer-relative 80% coverage 81.8% (full) / 80.3% (basic); per league 78.6–83.4% inside across all seasons, except Scotland 72.8% (flagged). Published output keeps both the whole-market and the peer-relative views.
+- Known caveat surfaced: top 2024/25 flags include Athletic Club players (Basque-only policy, rarely sold); added to the model card as an example of unobserved club conventions.
 - Tests: 84 (incl. leakage canary, conformal coverage, SHAP additivity, re-centring). Ruff line length raised to 120.
 
 ### Next
-- Decide on peer-relative gap labels, then Step 5: Expected Fee model + club audit + Hidden Gems backtest.
+- Step 5: Expected Fee model + club audit + Hidden Gems backtest.
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).

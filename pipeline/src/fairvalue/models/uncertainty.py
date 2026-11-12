@@ -4,7 +4,8 @@ Group-wise split-conformal intervals
 ------------------------------------
 For test season s, collect the model's OUT-OF-SAMPLE residuals (actual - predicted,
 log scale) from the previous CALIBRATION_SEASONS seasons. Within the row's
-calibration group (minutes band x line), take empirical quantiles of the signed
+calibration group (league x line, falling back to
+league, minutes band x line, minutes band, all), take empirical quantiles of the signed
 residuals and add them to the prediction:
 
     80% interval = [y_hat + q(0.10), y_hat + q(0.90)]
@@ -25,7 +26,9 @@ import pandas as pd
 CALIBRATION_SEASONS = 3
 MIN_CALIBRATION = 100
 LEVELS = {"80": (0.10, 0.90), "95": (0.025, 0.975)}
-GROUP_HIERARCHY = [["minutes_band", "line"], ["minutes_band"], []]
+# Most specific first. League-level groups give each league its own width (value dispersion differs
+# a lot: Scotland's Celtic/Rangers gap vs a compact Premier League); fall back when history is thin.
+GROUP_HIERARCHY = [["competition_id", "line"], ["competition_id"], ["minutes_band", "line"], ["minutes_band"], []]
 
 
 def _conformal_quantile(r: np.ndarray, q: float) -> float:
@@ -39,6 +42,8 @@ def calibrate(residuals: pd.DataFrame) -> dict[tuple, dict[str, float]]:
     """residuals: columns minutes_band, line, r -> {(level_keys...): {q: value}}."""
     table: dict[tuple, dict[str, float]] = {}
     for keys in GROUP_HIERARCHY:
+        if not set(keys) <= set(residuals.columns):
+            continue
         groups = residuals.groupby(keys) if keys else [((), residuals)]
         for k, g in groups:
             if len(g) < MIN_CALIBRATION:
@@ -58,6 +63,8 @@ def apply_intervals(rows: pd.DataFrame, table: dict) -> pd.DataFrame:
     out["calibration_group"] = None
     for idx, row in out.iterrows():
         for keys in GROUP_HIERARCHY:
+            if not set(keys) <= set(row.index):
+                continue
             k = tuple(row[c] for c in keys)
             hit = table.get((tuple(keys), k))
             if hit:
@@ -66,6 +73,23 @@ def apply_intervals(rows: pd.DataFrame, table: dict) -> pd.DataFrame:
                 out.at[idx, "calibration_group"] = "/".join(map(str, k)) or "all"
                 break
     return out
+
+
+# ------------------------------------------------------------------ peer-relative gaps (decision D11)
+MIN_PEER_ROWS = 30
+
+
+def peer_shift(rows: pd.DataFrame) -> pd.Series:
+    """Median residual r of each league-season (rows need season, competition_id, r).
+
+    Used to centre valuation gaps on same-league peers in the same summer, so a
+    league-wide market move (e.g. LaLiga 2024/25) isn't mistaken for individual
+    undervaluation. League-seasons with fewer than MIN_PEER_ROWS valued players
+    get no shift (0) rather than a noisy one.
+    """
+    g = rows.groupby(["season", "competition_id"]).r
+    med, n = g.transform("median"), g.transform("count")
+    return med.where(n >= MIN_PEER_ROWS, 0.0).fillna(0.0)
 
 
 # ------------------------------------------------------------------ reliability tiers (spec 2.3)

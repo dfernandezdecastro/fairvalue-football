@@ -25,22 +25,39 @@ from fairvalue.models import dataset, explain, training, uncertainty
 GBM_MIN_IMPROVEMENT = 0.05
 
 
-def _calibrated(frame: pd.DataFrame, results: list[training.FoldResult]) -> pd.DataFrame:
-    """Vintage predictions + conformal intervals calibrated only on earlier seasons."""
+CAL_COLS = ["season", "competition_id", "minutes_band", "line"]
+
+
+def _calibrated(frame: pd.DataFrame, results: list[training.FoldResult], peer: bool = False) -> pd.DataFrame:
+    """Vintage predictions + conformal intervals calibrated only on earlier seasons.
+
+    peer=False: intervals around the model prediction (whole-market view).
+    peer=True:  intervals around the prediction shifted by the league-season's
+                median residual (same-league peers, same summer; decision D11).
+                Calibration residuals from earlier seasons are peer-centred the
+                same way, so the interval width matches what it's applied to.
+    The returned 'center' column is the point the interval is built around.
+    """
     preds = training.predictions_frame(results)
-    rows = frame.loc[preds.index, ["season", "minutes_band", "line", "y"]].assign(y_hat=preds.y_hat)
-    store = {}  # season -> out-of-sample residuals
+    rows = frame.loc[preds.index, [*CAL_COLS, "y"]].assign(y_hat=preds.y_hat)
+    rows["shift"] = uncertainty.peer_shift(rows.assign(r=rows.y - rows.y_hat)) if peer else 0.0
+    rows["center"] = rows.y_hat + rows["shift"]
+    store = {}  # season -> out-of-sample residuals around the centre
     out = []
     for fr in results:
         s = fr.season
         pool = [store[k] for k in range(s - uncertainty.CALIBRATION_SEASONS, s) if k in store]
         if s - 1 not in store and len(fr.inner_residuals):
-            inner = frame.loc[fr.inner_residuals.index, ["minutes_band", "line"]].assign(r=fr.inner_residuals)
+            inner = frame.loc[fr.inner_residuals.index, CAL_COLS].assign(r=fr.inner_residuals)
+            if peer:
+                inner["r"] = inner.r - uncertainty.peer_shift(inner)
             pool.append(inner)
         table = uncertainty.calibrate(pd.concat(pool)) if pool else {}
         cur = rows[rows.season == s]
-        out.append(uncertainty.apply_intervals(cur, table))
-        store[s] = cur.loc[cur.y.notna(), ["minutes_band", "line"]].assign(r=cur.y - cur.y_hat)
+        res = uncertainty.apply_intervals(cur.assign(y_hat=cur.center), table)
+        res["y_hat"] = cur.y_hat
+        out.append(res)
+        store[s] = cur.loc[cur.y.notna(), CAL_COLS].assign(r=cur.y - cur.center)
     return pd.concat(out)
 
 
@@ -90,6 +107,9 @@ def evaluate_tier(frame: pd.DataFrame, tier: str, log=print) -> dict:
     better = g["metrics"]["mae_log"] <= (1 - GBM_MIN_IMPROVEMENT) * r["metrics"]["mae_log"]
     calib_ok = abs(g["coverage"]["coverage80"] - 0.8) <= abs(r["coverage"]["coverage80"] - 0.8) + 0.01
     out["chosen"] = "gbm" if (better and calib_ok) else "ridge"
+    out["peer_calibrated"] = _calibrated(frame, out["kinds"][out["chosen"]]["results"], peer=True)
+    out["peer_coverage"] = _coverage(out["peer_calibrated"])
+    log(f"  {tier}: peer-relative coverage80={out['peer_coverage']['coverage80']}")
     out["selection_reason"] = (
         f"gbm MAE {g['metrics']['mae_log']} vs ridge {r['metrics']['mae_log']} "
         f"({'>=' if better else '<'} {GBM_MIN_IMPROVEMENT:.0%} better); coverage80 gbm "
@@ -110,8 +130,10 @@ def publish(frame: pd.DataFrame, tier: str, ev: dict) -> pd.DataFrame:
         drivers.append(contrib.apply(explain.drivers_json, axis=1).rename("drivers"))
     drivers = pd.concat(drivers)
 
+    peer = ev["peer_calibrated"]
     rows = frame.loc[cal.index].copy()
     rows = rows.join(cal[["y_hat", "80_lo", "80_hi", "95_lo", "95_hi", "calibration_group"]]).join(drivers)
+    rows = rows.join(peer[["shift", "center", "80_lo", "80_hi", "95_lo", "95_hi"]].add_prefix("peer_"))
     rows["model_tier"], rows["model_kind"] = tier, kind
     rows["train_through"] = rows.season - 1
     data_tier = rows.data_tier if tier == "full" else pd.Series("basic", index=rows.index)
@@ -126,12 +148,21 @@ def publish(frame: pd.DataFrame, tier: str, ev: dict) -> pd.DataFrame:
     for col, src in [("estimate_eur", "y_hat"), ("lo80_eur", "80_lo"), ("hi80_eur", "80_hi"),
                      ("lo95_eur", "95_lo"), ("hi95_eur", "95_hi")]:  # fmt: skip
         rows[col] = np.where(ok, np.exp(rows[src] + idx), np.nan)  # rule R3: no estimate without a range
-    rows["gap_log"] = np.where(ok, rows.y - rows.y_hat, np.nan)
+    # Peer-relative view (D11): same-league peers, same summer. Gap labels use this view.
+    peer_ok = ok & rows.peer_80_lo.notna()
+    for col, src in [("peer_estimate_eur", "peer_center"), ("peer_lo80_eur", "peer_80_lo"),
+                     ("peer_hi80_eur", "peer_80_hi"), ("peer_lo95_eur", "peer_95_lo"),
+                     ("peer_hi95_eur", "peer_95_hi")]:  # fmt: skip
+        rows[col] = np.where(peer_ok, np.exp(rows[src] + idx), np.nan)
+    rows["league_shift_log"] = rows.peer_shift
+    rows["market_gap_log"] = np.where(ok, rows.y - rows.y_hat, np.nan)
+    rows["gap_log"] = np.where(peer_ok, rows.y - rows.peer_center, np.nan)
     rows["gap_label"] = [
         uncertainty.gap_label(y, a, b, c, d) if k else None
-        for y, a, b, c, d, k in zip(rows.y, rows["80_lo"], rows["80_hi"], rows["95_lo"], rows["95_hi"], ok,
-                                    strict=True)
-    ]  # fmt: skip
+        for y, a, b, c, d, k in zip(
+            rows.y, rows.peer_80_lo, rows.peer_80_hi, rows.peer_95_lo, rows.peer_95_hi, peer_ok, strict=True
+        )
+    ]
     rows["drivers"] = np.where(ok, rows.drivers, None)
     return rows
 
@@ -155,6 +186,7 @@ def run(log=print) -> dict:
             "chosen": ev["chosen"],
             "selection_reason": ev["selection_reason"],
             "baseline": ev["baseline"],
+            "peer_coverage": ev["peer_coverage"],
             **{k: {"metrics": v["metrics"], "by_season": v["by_season"], "coverage": v["coverage"],
                    "params": {str(s): p for s, p in v["params"].items()},
                    "recentre_offsets": {str(s): o for s, o in v["recentre_offsets"].items()}}
