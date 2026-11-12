@@ -73,8 +73,15 @@
 - Fixes during setup: club audit grouped by club id (74 clubs with 2+ spellings); primary-key checks before loading; db-check no longer mistakes a rejected key's 401s for "writes refused"; project URL normalised when it includes /rest/v1.
 - `web/lib/db/types.ts` generated from the live schema. Tests: 123.
 
+### 2026-11-13: Step 7 Design system and app shell done
+- Tokens for dark (default) and light themes: neutral palette, violet brand, blue discount / amber premium (never red/green), five-step chart palette; theme toggle persists without a flash.
+- Domain components (`web/components/domain/`): EstimateRange (log-scale dot-and-range with 80/95% bands), GapLabel and ReliabilityBadge (tooltips, wording from `lib/vocabulary.ts`), PercentileBar, DriversList, InsufficientData, DataTierPill, Stat, SourceFootnote. Formatters in `lib/format.ts`.
+- Shell: sticky header with nav, data-vintage pill, ⌘K search (players and clubs, accent-insensitive via migration 2), footer with attribution; global loading skeleton, error boundary, not-found. Nav routes are clearly marked "being built" until Step 8.
+- Server-only REST client with request-time rendering and a 24 h cache; data streamed behind Suspense (D16). `npm run lint:vocab` added to CI.
+- Component review page: `/design` (real database rows; noindex). Verified in browser: dark and light, mobile 375 px, search ("mbappe" → both Mbappés). Production build passes without credentials.
+
 ### Next
-- Step 7: design system and app shell (tokens, domain components such as EstimateRange / ReliabilityBadge / GapLabel / PercentileBar / InsufficientData, layout, ⌘K search, loading/empty/error states).
+- Step 8: core pages (Player Intelligence → Transfers → Hidden Gems → Clubs → Overview → Methodology).
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).

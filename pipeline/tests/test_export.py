@@ -13,7 +13,8 @@ SQL = "\n".join(p.read_text(encoding="utf-8") for p in sorted(load.MIGRATIONS.gl
 def _table_block(name: str) -> str:
     m = re.search(rf"create table {name} \((.*?)\n\);", SQL, re.S)
     assert m, f"table {name} missing from migrations"
-    return m.group(1)
+    added = re.findall(rf"alter table {name} add column (\w+ \w+)", SQL)  # columns added by later migrations
+    return m.group(1) + "".join(f"\n  {a}," for a in added)
 
 
 @pytest.mark.parametrize("table", list(contracts.PUBLISH))
@@ -103,3 +104,8 @@ def test_every_table_has_a_primary_key_matching_the_sql():
 def test_project_url_normalised(monkeypatch, value):
     monkeypatch.setattr(load, "require", lambda name: value)
     assert load.project_url() == "https://abc.supabase.co"
+
+
+def test_search_name_strips_accents():
+    assert publish.search_name("Kylian Mbappé") == "kylian mbappe"
+    assert publish.search_name("Atlético Madrid") == "atletico madrid"

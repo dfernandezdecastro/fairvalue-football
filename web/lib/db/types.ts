@@ -30,6 +30,7 @@ export interface Clubs {
   id: number;
   name: string;
   slug: string;
+  search_name: string | null;
 }
 
 /** `competitions` (table) */
@@ -157,6 +158,7 @@ export interface Players {
   foot: string | null;
   height_cm: number | null;
   citizenship: string | null;
+  search_name: string | null;
 }
 
 /** `similar_players` (table) */

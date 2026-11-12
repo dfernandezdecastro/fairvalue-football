@@ -12,10 +12,10 @@ RATE = ["goals", "assists", "npxg", "xa", "shots", "key_passes", "xg_chain", "xg
 
 PUBLISH: dict[str, Schema] = {
     "competitions": {"id": "str", "name": "str", "country": "str", "is_big5": "bool", "has_full_history": "bool"},
-    "clubs": {"id": "int", "name": "str", "slug": "str"},
+    "clubs": {"id": "int", "name": "str", "slug": "str", "search_name": "str"},
     "players": {
         "id": "int", "name": "str", "slug": "str", "birth_year": "Int", "position": "str", "sub_position": "str",
-        "foot": "str", "height_cm": "float", "citizenship": "str",
+        "foot": "str", "height_cm": "float", "citizenship": "str", "search_name": "str",
     },
     "model_runs": {
         "id": "str", "model": "str", "created_at": "str", "pipeline_version": "str", "is_current": "bool",

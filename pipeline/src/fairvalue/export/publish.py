@@ -8,6 +8,7 @@ transfers, birth year instead of full date of birth.
 from __future__ import annotations
 
 import json
+import unicodedata
 
 import numpy as np
 import pandas as pd
@@ -85,6 +86,8 @@ def build_tables(base=DATA_DIR) -> dict[str, pd.DataFrame]:
     clubs = clubs[clubs.club_id.isin(club_ids)].rename(columns={"club_id": "id"})
     clubs = clubs.drop_duplicates("id")
     clubs["slug"] = np.where(clubs.slug.duplicated(keep=False), clubs.slug + "-" + clubs.id.astype(str), clubs.slug)
+    players["search_name"] = players.name.map(search_name)
+    clubs["search_name"] = clubs.name.map(search_name)
     comp = r("staging", "competitions").rename(columns={"competition_id": "id", "country_name": "country"})
 
     # ---- runs, coverage, meta
@@ -128,6 +131,11 @@ def check_primary_keys(tables: dict[str, pd.DataFrame]) -> None:
     dupes = {k: v for k, v in dupes.items() if v}
     if dupes:
         raise ValueError(f"duplicate primary keys: {dupes}")
+
+
+def search_name(name: str) -> str:
+    """Lower-case, accent-free form used for search ("Mbappé" -> "mbappe")."""
+    return unicodedata.normalize("NFKD", str(name)).encode("ascii", "ignore").decode().lower().strip()
 
 
 def check_licensing(tables: dict[str, pd.DataFrame]) -> None:
