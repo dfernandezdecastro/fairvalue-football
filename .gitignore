@@ -1,7 +1,9 @@
 # Third-party data must never be published (see DATA_SOURCES.md)
-data/raw/
-data/interim/
-data/sample/*.csv
+# Everything under data/ is local-only, except the sample's documentation
+data/*
+!data/sample/
+data/sample/*
+!data/sample/README.md
 
 # Python
 .venv/

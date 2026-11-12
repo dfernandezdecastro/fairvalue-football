@@ -189,6 +189,10 @@ Timeline impact: the data pipeline gets simpler (the sources are frozen and alre
 
 ---
 
+### Erratum (Step 2 staging, 12 Nov 2026)
+
+The probable-loan rule ("the player's next move reverses this one within 400 days") depended on the arbitrary order of same-day rows. In **"buy and loan back"** deals (for example Atalanta → Inter €40.7M in 2017 with an immediate loan back to Atalanta), it sometimes excluded the permanent paid transfer as a loan. The staging pipeline now requires the return to happen on a *later* date. Corrected counts: F1 **15,416** (was 15,405) and F2 **5,637** (was 5,630); 11 transfers restored in total. Usable-set counts (F7 and ALT) are recomputed by the as-of feature builder in Step 3.
+
 ### Reproducibility
 
 ```bash

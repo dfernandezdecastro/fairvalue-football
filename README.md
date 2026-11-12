@@ -24,6 +24,11 @@ python -m venv .venv
 .venv/Scripts/python -m pip install -e "pipeline[dev]"     # macOS/Linux: .venv/bin/python
 cd pipeline && ../.venv/Scripts/python -m pytest
 
+# Data pipeline (needs the local raw snapshot, see DATA_SOURCES.md)
+.venv/Scripts/fairvalue stage      # verify checksums, build data/staging/
+.venv/Scripts/fairvalue check      # reconcile with published feasibility numbers
+.venv/Scripts/fairvalue quality    # write reports/staging/data_quality.md
+
 # Web app
 cd web && npm install && npm run dev                       # http://localhost:3000
 ```

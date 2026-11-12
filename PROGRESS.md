@@ -26,8 +26,21 @@
 - Verified: no raw data tracked by Git.
 - **Pending (user):** create a private GitHub repo and push. The GitHub CLI isn't installed, so this is a manual step. CI hasn't run on GitHub yet.
 
+### 2026-11-12: Step 2 Staging pipeline done
+- `fairvalue.ingest`: data contracts (`schemas.py`, enforced on every read and write); sha256-verified sources; Transfermarkt read straight from the snapshot zip; Understat parsed offline from the archive cache (`fetch-understat` rebuilds it).
+- Snapshot-only fields (caps, contract expiry, current club, latest MV, agent) are excluded at ingest, so they can never reach a model.
+- `fairvalue.staging`: 12 staging tables in `data/staging/*.csv.gz` + `manifest.json` (≈40 s build). CSV with schema-on-read because Windows Smart App Control blocks pyarrow's DLL.
+- ID matching ported unchanged: 98.1% match rate, 7,819 players mapped.
+- **Correction found:** the feasibility loan rule depended on the arbitrary order of same-day rows and excluded 11 "buy and loan back" transfers. Fixed (the return must be on a later date) and tested. F1 15,405 → 15,416, F2 5,630 → 5,637; erratum added to the feasibility report.
+- CLI: `fairvalue stage | check | quality | fetch-understat`. `check` reconciles 7 published numbers (all OK). `reports/staging/data_quality.md` generated.
+- Tests: 46 unit tests (synthetic fixtures, run in CI) + 1 local-data reconciliation test (skipped in CI).
+- `.gitignore` now ignores everything under `data/` except `data/sample/README.md`.
+
+### Pending (user)
+- Fix the Git remote: it contains the literal placeholder `<your-username>`. Then push.
+
 ### Next
-- Step 2 Staging pipeline: ingest + validation of frozen sources, ID matching moved into `fairvalue.staging`, staging parquet that reproduces the feasibility numbers.
+- Step 3: as-of feature builder (player-season and transfer features), Layer 1 performance profiles (shrinkage, percentiles, similarity), leakage tests; reproduce the usable-set counts (feasibility 1,792 / 4,892, expected to rise slightly after the loan correction).
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).
