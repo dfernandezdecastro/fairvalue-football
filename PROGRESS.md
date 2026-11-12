@@ -64,8 +64,14 @@
 - Backtest: potential undervaluation +7.9% vs peers over 12 months (80% CI 6.5–11.1), strong signal +13.9%, market premium −3.8%; consistent in all 10 seasons.
 - Decisions D12–D14. Tests: 100 passing (13 new for Step 5).
 
+### 2026-11-12: Step 6 database code ready (load pending)
+- `supabase/migrations/20261112000001_init.sql`: 11 tables, 3 views (security_invoker), trigram search index, RLS read-only policies, R3 check constraints (no estimate without its range).
+- `fairvalue publish | db-load | db-check | gen-types`: published tables built with contracts, licensing guard and referential checks (D15); single-transaction load; anonymous read/write verification; TS types from the live schema.
+- Setup guide `docs/SUPABASE_SETUP.md`; `.env.example` and `web/.env.example` (secrets git-ignored).
+- **Pending (user):** create the Supabase project and fill `.env`, then run db-load / db-check / gen-types.
+
 ### Next
-- Step 6: Supabase database (migrations, RLS read-only, loader for derived outputs only, generated TypeScript types).
+- Finish Step 6 (load + verify + types), then Step 7: design system and app shell.
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).

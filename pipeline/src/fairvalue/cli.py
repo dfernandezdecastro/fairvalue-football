@@ -7,6 +7,10 @@ quality           write reports/staging/data_quality.md
 features          build as-of features and performance profiles from staging
 train-piv         walk-forward train, evaluate and publish the performance-implied value model
 train-fee         expected fee model, club audit and hidden gems backtest (after train-piv)
+publish           build the published tables and print their sizes (no database needed)
+db-load           apply migrations and load published tables into Supabase (needs .env)
+db-check          verify anonymous visitors can read but not write (needs .env)
+gen-types         write web/lib/db/types.ts from the live schema (needs .env)
 """
 
 from __future__ import annotations
@@ -19,7 +23,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="fairvalue", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)  # fmt: skip
     parser.add_argument(
-        "command", choices=["fetch-understat", "stage", "check", "quality", "features", "train-piv", "train-fee"]
+        "command",
+        choices=[
+            "fetch-understat",
+            "stage",
+            "check",
+            "quality",
+            "features",
+            "train-piv",
+            "train-fee",
+            "publish",
+            "db-load",
+            "db-check",
+            "gen-types",
+        ],
     )
     args = parser.parse_args(argv)
 
@@ -32,6 +49,28 @@ def main(argv: list[str] | None = None) -> int:
         from fairvalue.staging.build import run
 
         run()
+        return 0
+
+    if args.command == "publish":
+        from fairvalue.export.publish import build_tables, summary
+
+        s = summary(build_tables())
+        print(s.to_string())
+        print(f"total {s.csv_mb.sum():.1f} MB as CSV")
+        return 0
+    if args.command == "db-load":
+        from fairvalue.export.load import run_load
+
+        run_load()
+        return 0
+    if args.command == "db-check":
+        from fairvalue.export.load import check_public_access
+
+        return 0 if check_public_access() else 1
+    if args.command == "gen-types":
+        from fairvalue.export.load import gen_types
+
+        gen_types()
         return 0
 
     if args.command == "train-fee":

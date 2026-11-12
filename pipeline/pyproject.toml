@@ -14,6 +14,7 @@ dependencies = [
     "requests>=2.32",
     "tabulate>=0.9",
     "shap>=0.46",  # per-prediction explanations for tree models (Step 4, see docs/DECISIONS.md D10)
+    "psycopg[binary]>=3.2",  # load derived outputs into Postgres (Step 6)
 ]
 
 [project.scripts]
