@@ -11,7 +11,8 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from fairvalue.config import BIG5
+from fairvalue.config import BIG5, DATA_DIR
+from fairvalue.io import read_table
 from fairvalue.staging.build import read_staging
 
 
@@ -43,6 +44,16 @@ EXPECTED = {
 }
 
 
+# Step 3 (as-of features). Versus the feasibility study (1,792 / 4,892):
+# +1 / +1 from the loan correction, and for usable_full +6 / -5 from the
+# COVID guard (summer-2020 moves now use 2018/19 stats when 2019/20 was unfinished).
+EXPECTED_FEATURES = {
+    "usable_full": 1_794,
+    "usable_basic": 4_893,
+    "transfers_using_previous_but_one_season": 140,
+}
+
+
 def run_checks() -> list[Check]:
     t = read_staging("transfers")
     window = t[t.date >= pd.Timestamp("2015-07-01")]
@@ -64,6 +75,15 @@ def run_checks() -> list[Check]:
         "understat_match_rate": round(float((m.confidence != "unmatched").mean()), 3),
         "understat_players_mapped": len(pm),
     }
-    return [
+    checks = [
         Check(k, v, actual[k], tolerance=0.001 if isinstance(v, float) else 0) for k, v in EXPECTED.items()
     ]
+    if (DATA_DIR / "features" / "transfer_features.csv.gz").exists():
+        tf = read_table("features", "transfer_features")
+        feat_actual = {
+            "usable_full": int(tf.usable_full.sum()),
+            "usable_basic": int(tf.usable_basic.sum()),
+            "transfers_using_previous_but_one_season": int((tf.feat_season == tf.season - 2).sum()),
+        }
+        checks += [Check(k, v, feat_actual[k]) for k, v in EXPECTED_FEATURES.items()]
+    return checks

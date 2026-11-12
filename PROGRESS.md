@@ -36,11 +36,18 @@
 - Tests: 46 unit tests (synthetic fixtures, run in CI) + 1 local-data reconciliation test (skipped in CI).
 - `.gitignore` now ignores everything under `data/` except `data/sample/README.md`.
 
-### Pending (user)
-- Fix the Git remote: it contains the literal placeholder `<your-username>`. Then push.
+- Remote fixed (github.com/dfernandezdecastro/fairvalue-football, private) and pushed. CI first failed (Next.js route types not generated before `tsc`); fixed with `next typegen`; CI green.
+
+### 2026-11-12: Step 3 As-of features + Layer 1 profiles done
+- `fairvalue features` (≈30 s) writes `data/features/`: player_season_features (92,958 rows, as of each league's season end), transfer_features (15,794 paid transfers, as of the transfer date, with funnel flags), profiles (per-90, shrunk per-90, percentiles, peer_n), similar_players (top 20), shrinkage_priors; plus `reports/features/feature_summary.md`.
+- Leakage guards: strictly-before market values and form windows; season-level stats only from seasons finished before the transfer (COVID guard, 140 transfers); build-time `assert_point_in_time`; "future spike" tests.
+- Usable sets: **1,794 full tier / 4,893 basic tier**. Every difference from the feasibility numbers is explained (loan fix +1/+1; COVID guard +6/−5). Added to `fairvalue check` (10/10 OK).
+- Shrinkage fix during development: xG metrics were over-shrunk by the Poisson assumption; they now borrow k from their underlying counts (decision D6).
+- Sanity checks: Haaland/Kane 99–100th percentile npxG; Saka's nearest profiles are Son, Foden, Palmer, Salah.
+- Tests: 64 (synthetic fixtures). Decision log started: `docs/DECISIONS.md` (D1–D6).
 
 ### Next
-- Step 3: as-of feature builder (player-season and transfer features), Layer 1 performance profiles (shrinkage, percentiles, similarity), leakage tests; reproduce the usable-set counts (feasibility 1,792 / 4,892, expected to rise slightly after the loan correction).
+- Step 4: Performance-implied value model. Target = log market value after season end, normalised by that summer's market level; walk-forward vintage training; Ridge vs gradient boosting; group-wise conformal intervals; SHAP drivers; model card. Needs `shap` as a new dependency (to justify in the step).
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).

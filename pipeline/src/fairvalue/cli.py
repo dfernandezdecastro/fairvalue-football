@@ -4,6 +4,7 @@ fetch-understat   rebuild the Understat archive cache (network, slow, polite)
 stage             verify raw sources and build data/staging/
 check             reconcile staging with the published feasibility numbers
 quality           write reports/staging/data_quality.md
+features          build as-of features and performance profiles from staging
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import sys
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="fairvalue", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)  # fmt: skip
-    parser.add_argument("command", choices=["fetch-understat", "stage", "check", "quality"])
+    parser.add_argument("command", choices=["fetch-understat", "stage", "check", "quality", "features"])
     args = parser.parse_args(argv)
 
     if args.command == "fetch-understat":
@@ -27,6 +28,12 @@ def main(argv: list[str] | None = None) -> int:
         from fairvalue.staging.build import run
 
         run()
+        return 0
+
+    if args.command == "features":
+        from fairvalue.features.build import run as run_features
+
+        run_features()
         return 0
 
     if args.command == "quality":

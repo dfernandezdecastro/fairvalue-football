@@ -18,24 +18,19 @@ import pandas as pd
 from fairvalue import __version__
 from fairvalue.config import BIG5, STAGING_DIR, TRANSFERMARKT_CUTOFF
 from fairvalue.ingest import sources
-from fairvalue.ingest.schemas import STAGING, enforce
 from fairvalue.ingest.transfermarkt import read_table
 from fairvalue.ingest.understat_archive import read_cache
+from fairvalue.io import read_table as read_table_
+from fairvalue.io import write_table
 from fairvalue.staging import core, matching
 
 
 def write_staging(df: pd.DataFrame, name: str, out_dir: Path = STAGING_DIR) -> int:
-    out_dir.mkdir(parents=True, exist_ok=True)
-    checked = enforce(df, STAGING[name], f"staging.{name}")
-    checked.to_csv(out_dir / f"{name}.csv.gz", index=False, date_format="%Y-%m-%d")
-    return len(checked)
+    return write_table(df, "staging", name, base=out_dir.parent)
 
 
 def read_staging(name: str, out_dir: Path = STAGING_DIR) -> pd.DataFrame:
-    path = out_dir / f"{name}.csv.gz"
-    if not path.exists():
-        raise FileNotFoundError(f"{path} missing. Run: fairvalue stage")
-    return enforce(pd.read_csv(path, low_memory=False), STAGING[name], f"staging.{name}")
+    return read_table_("staging", name, base=out_dir.parent)
 
 
 def run(out_dir: Path = STAGING_DIR, log=print) -> dict:

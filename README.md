@@ -28,6 +28,7 @@ cd pipeline && ../.venv/Scripts/python -m pytest
 .venv/Scripts/fairvalue stage      # verify checksums, build data/staging/
 .venv/Scripts/fairvalue check      # reconcile with published feasibility numbers
 .venv/Scripts/fairvalue quality    # write reports/staging/data_quality.md
+.venv/Scripts/fairvalue features   # as-of features + performance profiles -> data/features/
 
 # Web app
 cd web && npm install && npm run dev                       # http://localhost:3000
