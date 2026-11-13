@@ -43,7 +43,8 @@ async function Overview() {
       model: "eq.expected_fee", is_current: "eq.true", select: "under:summary->gems_backtest->pooled->under",
     }),
   ]);
-  const series = cycle?.value ?? [];
+  // The data ends on 6 July 2026, so the 2026/27 summer window has barely started: leave it out.
+  const series = (cycle?.value ?? []).filter((p) => p.season <= 2025);
   const seasons = [...new Set(series.map((p) => p.season))].sort();
   const points: CyclePoint[] = seasons.map((s) => ({
     season: seasonLabel(s),

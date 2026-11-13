@@ -3,6 +3,7 @@
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { formatEur, formatEurRange } from "@/lib/format";
+import { logTicks } from "@/lib/ticks";
 
 export interface HistoryPoint {
   season: string;
@@ -49,7 +50,7 @@ export function ValueHistoryChart({ data }: { data: HistoryPoint[] }) {
         <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
           <CartesianGrid vertical={false} stroke="var(--border)" />
           <XAxis dataKey="season" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-          <YAxis scale="log" domain={domain} allowDataOverflow tickFormatter={(v: number) => formatEur(v)} width={56}
+          <YAxis scale="log" domain={domain} allowDataOverflow ticks={logTicks(domain[0], domain[1])} tickFormatter={(v: number) => formatEur(v)} width={56}
                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
           <Tooltip content={<HistoryTooltip />} cursor={{ stroke: "var(--border)" }} />
           <Area dataKey="band" stroke="none" fill="var(--range-strong)" fillOpacity={0.55} isAnimationActive={false}

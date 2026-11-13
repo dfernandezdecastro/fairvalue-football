@@ -22,7 +22,7 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/methodology#data"
-            className="hidden rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground hover:text-foreground lg:inline"
+            className="hidden rounded-full border px-2.5 py-0.5 text-xs whitespace-nowrap text-muted-foreground hover:text-foreground xl:inline"
             title="Frozen snapshot: see Methodology for coverage and sources"
           >
             {DATA_VINTAGE}

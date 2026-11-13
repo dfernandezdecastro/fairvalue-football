@@ -128,7 +128,7 @@ async function Results({ sp, season, league, m1, m2, page, metrics }: {
 function strengths(r: VPlayerSeason, metrics: string[]) {
   return metrics
     .map((m) => ({ m, pct: r[`${m}_pct` as keyof VPlayerSeason] as number | null }))
-    .filter((x): x is { m: string; pct: number } => x.pct != null)
+    .filter((x): x is { m: string; pct: number } => x.pct != null && x.pct >= 60) // only genuine strengths
     .sort((a, b) => b.pct - a.pct)
     .slice(0, 3);
 }

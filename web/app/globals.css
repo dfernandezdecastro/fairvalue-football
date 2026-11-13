@@ -75,8 +75,8 @@
   /* Discount (blue) / premium (amber): a gap is a signal, never a moral judgement (rule R1) */
   --discount: oklch(0.52 0.14 250);
   --discount-soft: oklch(0.94 0.03 250);
-  --premium: oklch(0.6 0.15 65);
-  --premium-soft: oklch(0.95 0.04 75);
+  --premium: oklch(0.5 0.12 60); /* darker amber: WCAG AA (>= 4.5:1) on the soft chip and page background */
+  --premium-soft: oklch(0.96 0.035 75);
   --within: oklch(0.55 0.01 270);
   --range: oklch(0.88 0.008 270);
   --range-strong: oklch(0.72 0.012 270);

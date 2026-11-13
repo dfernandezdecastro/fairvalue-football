@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   title: { default: "FairValue Football", template: "%s · FairValue Football" },
   description:
     "Transfer-market intelligence: how market values and fees compare with measurable performance, with the uncertainty shown.",
+  openGraph: {
+    title: "FairValue Football",
+    description: "Where does the transfer market's price disagree with the evidence, and how sure can we be?",
+    type: "website",
+  },
 };
 
 // Runs before first paint: dark by default, light only if the visitor chose it. Avoids a theme flash.
@@ -25,9 +30,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
+        <a href="#main" className="sr-only rounded-md bg-background px-3 py-2 text-sm focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:ring-2 focus:ring-ring">
+          Skip to content
+        </a>
         <TooltipProvider delay={150}>
           <SiteHeader />
-          <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-10 sm:px-6">{children}</main>
+          <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 pt-10 sm:px-6">{children}</main>
           <SiteFooter />
         </TooltipProvider>
       </body>
