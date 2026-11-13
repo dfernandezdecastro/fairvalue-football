@@ -93,7 +93,9 @@
 - Performance (production build): pages complete in <= 0.2 s locally; static shells stream data.
 - Icon, robots rules (/design and /api excluded), Open Graph metadata.
 - Portfolio README with results and architecture; `docs/CASE_STUDIES.md` (Mitrović premium, Athletic Club convention, Hidden Gems hits and misses); `docs/DEPLOY.md`.
-- **Pending (user):** create the Vercel project (root directory `web`, two public env vars), then share the URL for a live check.
+- **Deployed (2026-11-13):** https://fairvalue-football.vercel.app (Vercel Hobby, root directory `web`, two public read-only env vars). The first deploy lacked the env vars (pages showed the "not configured" state); fixed by adding them and redeploying. Live check: all 8 main routes return 200 with real data (~0.8–1.9 s cold), search works ("mbappe" finds both), robots and icon served.
+
+## Status: MVP complete (Steps 1–9).
 
 ### After the MVP
 - AI Football Analyst (deferred by decision), player comparison page, scheduled data refresh if a licensed source becomes available.

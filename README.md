@@ -2,6 +2,8 @@
 
 **Where does the transfer market's price disagree with the evidence, and how sure can we be?**
 
+**Live:** https://fairvalue-football.vercel.app
+
 FairValue compares player market values and transfer fees with what measurable performance and context usually command in the same market. Every estimate comes with an uncertainty range, labels appear only when a value falls outside that range, and the product says so when the data is too thin to judge.
 
 > Non-commercial research and portfolio project. Data is a frozen snapshot: Transfermarkt (via the community transfermarkt-datasets project) to 6 July 2026, Understat xG to 2024/25. Raw data is never republished. See [DATA_SOURCES.md](DATA_SOURCES.md).

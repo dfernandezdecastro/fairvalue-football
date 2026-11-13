@@ -17,6 +17,8 @@ The site only needs two **public, read-only** values. The database password neve
 
 After this, every push to `main` redeploys automatically.
 
+**If the site shows "Data source not configured" (or search answers "temporarily unavailable"):** the environment variables are missing or were added after the build. Add them under the project's **Settings → Environment Variables**, then **Deployments → ⋯ → Redeploy**. Variables only apply to deployments built after they were saved.
+
 ## What NOT to put in Vercel
 - The database password or `SUPABASE_DB_URL`. The web app never writes.
 - The Supabase *secret* or *service-role* key.
