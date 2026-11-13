@@ -80,8 +80,15 @@
 - Server-only REST client with request-time rendering and a 24 h cache; data streamed behind Suspense (D16). `npm run lint:vocab` added to CI.
 - Component review page: `/design` (real database rows; noindex). Verified in browser: dark and light, mobile 375 px, search ("mbappe" → both Mbappés). Production build passes without credentials.
 
+### 2026-11-13: Step 8 Core pages done
+- Player Intelligence (`/players/[slug]`): season switcher, valuation vs peer range or an "insufficient" panel, SHAP drivers, percentile profile vs position peers, valuation-history chart (vintage bands), paid transfers, similar profiles, data & coverage.
+- Players explorer (`/players`), Transfer Intelligence (`/transfers` with rankings tabs, `/transfers/[id]` with before/after and the outcome kept separate), Hidden Gems (`/hidden-gems`: filters including percentile conditions, template rationales, cheaper-alternatives mode, backtest banner), Clubs (`/clubs` rankings with bootstrap ranges, `/clubs/[slug]` with fee-vs-expected scatter and recruitment patterns), Overview (`/`), Methodology (`/methodology` with live model numbers, coverage grid, leakage policy, backtest by season, glossary, limitations).
+- All filters live in the URL; all pages stream behind Suspense; production build passes without credentials.
+- Fixes: club rankings limited to covered-league clubs (reserve teams were topping the list); premium rankings by euros; market-cycle series added to app_meta (D17).
+- Verified via HTTP (the browser pane was hidden after the restart): every route returns 200 with the expected content. A visual pass in the browser is still to do.
+
 ### Next
-- Step 8: core pages (Player Intelligence → Transfers → Hidden Gems → Clubs → Overview → Methodology).
+- Step 9: polish and deploy (visual review across pages, responsive and accessibility pass, performance, Vercel deploy with env vars, README and case studies).
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).

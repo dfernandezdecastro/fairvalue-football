@@ -139,7 +139,8 @@ def run(log=print) -> dict:
 
     log("club audit (bootstrap intervals)...")
     valuations = read_table("staging", "valuations")
-    audit = club_audit.build(fees, valuations)
+    covered = set(read_table("staging", "club_league_seasons").club_id.astype(int))
+    audit = club_audit.build(fees, valuations, covered)
     write_table(audit, "outputs", "club_audit")
 
     log("hidden gems backtest...")

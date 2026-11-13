@@ -85,3 +85,10 @@ Short records of non-obvious technical decisions: context, decision, consequence
   - All classification wording lives in `web/lib/vocabulary.ts`, and `npm run lint:vocab` (in CI) fails on verdict words such as "overpaid", "bargain", "undervalued" or "true value".
   - Accent-insensitive search via a pipeline-computed `search_name` column ("mbappe" finds "Mbappé").
 - **Consequence:** no supabase-js dependency, and a production build succeeds with no credentials (verified). Views are typed as all-nullable (Postgres reports view columns that way), so UI helpers accept `null` explicitly.
+
+## D17. Product decisions while building the pages (Step 8)
+- **Premium rankings use euros, not percentages.** Ranking by % put tiny deals on top (a €1M fee on a €0.3M expectation is "+230%"). The "largest premiums/discounts" tabs and the Overview rank by the absolute premium in euros.
+- **Only clubs that played in a covered league are ranked.** The first "highest price ratio" list was topped by Juve Next Gen (Juventus' reserve team, whose "purchases" are moves within the group) and an Egyptian club. Clubs outside coverage keep their audit page but aren't ranked: 427 clubs ranked.
+- **The vocabulary guard has a reviewed escape hatch.** Lines that explain what FairValue does *not* say (e.g. "never calls a transfer 'overpaid'") carry a `vocab-ok` comment. The guard also caught a real slip during development ("most undervalued first" became "largest potential undervaluation first").
+- **Every page streams.** The page header and nav render instantly; data sections stream behind `<Suspense>` (the nav's active state too, since reading the URL needs a boundary). All data routes build as partial prerenders without database credentials.
+- **Outcomes stay visibly separate.** Transfer and club pages show the market value after the move, labelled "observed after the transfer, not used by any model".

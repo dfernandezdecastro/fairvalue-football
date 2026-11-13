@@ -60,8 +60,8 @@ async function TransfersBody({ searchParams }: { searchParams: Promise<SearchPar
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   };
-  if (view === "premiums") Object.assign(params, { label: quote(PREMIUM), order: "premium_pct.desc" });
-  else if (view === "discounts") Object.assign(params, { label: quote(DISCOUNT), order: "premium_pct.asc" });
+  if (view === "premiums") Object.assign(params, { label: quote(PREMIUM), order: "premium_eur.desc" });
+  else if (view === "discounts") Object.assign(params, { label: quote(DISCOUNT), order: "premium_eur.asc" });
   else {
     params.order = "fee_eur.desc";
     if (cls === "premium") params.label = quote(PREMIUM);
@@ -75,8 +75,8 @@ async function TransfersBody({ searchParams }: { searchParams: Promise<SearchPar
     <div className="space-y-4">
       <ViewTabs path="/transfers" sp={sp} param="view" value={view} tabs={[
         { value: "all", label: "All transfers" },
-        { value: "premiums", label: "Largest premiums vs expectation" },
-        { value: "discounts", label: "Largest discounts vs expectation" },
+        { value: "premiums", label: "Largest premiums (€) vs expectation" },
+        { value: "discounts", label: "Largest discounts (€) vs expectation" },
       ]} />
       <FilterForm action="/transfers">
         {view !== "all" && <input type="hidden" name="view" value={view} />}

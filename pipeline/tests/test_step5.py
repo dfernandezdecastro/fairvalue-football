@@ -110,3 +110,15 @@ def test_club_audit_one_row_per_club_even_with_two_spellings():
     vals = pd.DataFrame({"player_id": range(10), "date": [D("2024-07-01")] * 10, "value_eur": 9e6})
     a = club_audit.build(fees, vals)
     assert len(a[a.period == "all"]) == 1 and a.club_name.iat[0] == "Roma"
+
+
+def test_club_audit_ranks_only_clubs_from_covered_leagues():
+    n = 10
+    fees = pd.DataFrame({
+        "transfer_id": range(n), "player_id": range(n), "date": [D("2023-07-01")] * n, "season": 2023,
+        "to_club_id": [1] * 9 + [2], "to_club_name": ["A"] * 9 + ["B"], "fee_eur": 10e6,
+        "expected_fee_eur": 8e6, "mv_pit_eur": 9e6, "reliability": "High", "label": "Within expected range",
+    })  # fmt: skip
+    vals = pd.DataFrame({"player_id": range(n), "date": [D("2024-07-20")] * n, "value_eur": 9e6})
+    a = club_audit.build(fees, vals, covered_club_ids={2}).set_index(["club_name", "period"])
+    assert not a.loc[("A", "all"), "ranked"]  # 9 purchases but never in a covered league (e.g. a reserve team)

@@ -7,7 +7,9 @@ comparable deals commanded; > 1: paid premiums.
 Uncertainty: 80% bootstrap interval from resampling the club's transfers
 (2,000 draws). This captures how much the ratio depends on a few deals; it
 does not add each transfer's own model uncertainty, so it is a lower bound on
-the true uncertainty (stated in the app). Clubs need >= MIN_PURCHASES assessed
+the true uncertainty (stated in the app). Ranked clubs must have played in a covered
+domestic league (where the model's comparisons are meaningful; this excludes e.g.
+reserve teams whose "purchases" are moves within their own group) and need >= MIN_PURCHASES assessed
 purchases to be ranked.
 
 Outcome column (NOT used by any model): median change in market value 12
@@ -42,7 +44,9 @@ def bootstrap_ratio(fee: np.ndarray, expected: np.ndarray, rng: np.random.Genera
     return float(np.quantile(ratios, 0.10)), float(np.quantile(ratios, 0.90))
 
 
-def build(fees: pd.DataFrame, valuations: pd.DataFrame, seed: int = 0) -> pd.DataFrame:
+def build(
+    fees: pd.DataFrame, valuations: pd.DataFrame, covered_club_ids: set[int] | None = None, seed: int = 0
+) -> pd.DataFrame:
     f = fees[fees.reliability != "Insufficient"].copy()
     f["mv_12m_after"] = mv_after(f, valuations)
     f["mv_change_12m_log"] = np.log(f.mv_12m_after / f.mv_pit_eur)
@@ -50,6 +54,7 @@ def build(fees: pd.DataFrame, valuations: pd.DataFrame, seed: int = 0) -> pd.Dat
     periods = {"all": (int(f.season.min()), last), "last3": (last - 2, last)}
     rng = np.random.default_rng(seed)
     rows = []
+    in_coverage = (lambda cid: True) if covered_club_ids is None else (lambda cid: int(cid) in covered_club_ids)  # noqa: E731
     for period, (lo, hi) in periods.items():
         p = f[(f.season >= lo) & (f.season <= hi)]
         for club_id, g in p.groupby("to_club_id"):  # by id only: 74 clubs appear under 2+ spellings
@@ -60,7 +65,7 @@ def build(fees: pd.DataFrame, valuations: pd.DataFrame, seed: int = 0) -> pd.Dat
                 np.nan, np.nan)  # fmt: skip
             rows.append(dict(
                 club_id=int(club_id), club_name=club_name, period=period, season_from=lo, season_to=hi,
-                n_assessed=n, ranked=n >= MIN_PURCHASES,
+                n_assessed=n, ranked=n >= MIN_PURCHASES and in_coverage(club_id),
                 total_fee_eur=float(g.fee_eur.sum()), total_expected_eur=float(g.expected_fee_eur.sum()),
                 price_ratio=float(ratio), price_ratio_lo80=r_lo, price_ratio_hi80=r_hi,
                 share_notable_premium=float(g.label.isin(NOTABLE_PREMIUM).mean()),

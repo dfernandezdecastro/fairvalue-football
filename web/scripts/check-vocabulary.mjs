@@ -1,5 +1,5 @@
 // Rule R1 guard: fails if UI source contains verdict language (docs/PRODUCT_SPEC.md section 2).
-// Run: npm run lint:vocab (also in CI).
+// Run: npm run lint:vocab (also in CI). A line may opt out with a "vocab-ok" comment, only to explain what we do NOT say.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
@@ -37,6 +37,8 @@ for (const root of ROOTS) {
     readFileSync(file, "utf8")
       .split("\n")
       .forEach((line, i) => {
+        // Explicit, reviewable exception for sentences that explain what FairValue does NOT say.
+        if (line.includes("vocab-ok")) return;
         for (const re of BANNED) if (re.test(line)) hits.push(`${relative(".", file)}:${i + 1}  ${line.trim()}`);
       });
   }
