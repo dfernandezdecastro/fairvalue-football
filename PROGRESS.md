@@ -87,8 +87,16 @@
 - Fixes: club rankings limited to covered-league clubs (reserve teams were topping the list); premium rankings by euros; market-cycle series added to app_meta (D17).
 - Verified via HTTP (the browser pane was hidden after the restart): every route returns 200 with the expected content. A visual pass in the browser is still to do.
 
-### Next
-- Step 9: polish and deploy (visual review across pages, responsive and accessibility pass, performance, Vercel deploy with env vars, README and case studies).
+### 2026-11-13: Step 9 Polish and deployment prep
+- Visual pass on every page (dark and light, desktop and 375 px): no horizontal overflow on any route. Fixes: nice log-axis ticks, incomplete 2026/27 window excluded from the overview, rationales list only genuine strengths (>= 60th percentile), header pill.
+- Accessibility: WCAG contrast measured for every token pair in both themes; light-theme amber darkened to pass AA (3.5:1 to 5.5:1); skip-to-content link; labelled form fields, aria-labels on charts.
+- Performance (production build): pages complete in <= 0.2 s locally; static shells stream data.
+- Icon, robots rules (/design and /api excluded), Open Graph metadata.
+- Portfolio README with results and architecture; `docs/CASE_STUDIES.md` (Mitrović premium, Athletic Club convention, Hidden Gems hits and misses); `docs/DEPLOY.md`.
+- **Pending (user):** create the Vercel project (root directory `web`, two public env vars), then share the URL for a live check.
+
+### After the MVP
+- AI Football Analyst (deferred by decision), player comparison page, scheduled data refresh if a licensed source becomes available.
 
 ### Known limitations to carry forward
 - No contract length at transfer; caps, position and contract fields are current snapshots (leakage risk).
