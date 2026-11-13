@@ -15,7 +15,15 @@ export const NAV = [
 ];
 
 export function NavLinks({ className }: { className?: string }) {
-  const path = usePathname();
+  return <NavLinksInner className={className} path={usePathname()} />;
+}
+
+/** Shown while the active-path version streams in (usePathname needs a Suspense boundary). */
+export function NavLinksStatic({ className }: { className?: string }) {
+  return <NavLinksInner className={className} path="" />;
+}
+
+function NavLinksInner({ className, path }: { className?: string; path: string }) {
   return (
     <nav className={cn("flex items-center gap-1", className)} aria-label="Main">
       {NAV.map((item) => {

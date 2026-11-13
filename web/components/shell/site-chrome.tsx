@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
-import { NavLinks, ThemeToggle } from "@/components/shell/nav";
+import { NavLinks, NavLinksStatic, ThemeToggle } from "@/components/shell/nav";
 import { SearchCommand } from "@/components/shell/search-command";
 
 export const DATA_VINTAGE = "Data to 6 Jul 2026 · xG to 2024/25";
@@ -15,7 +16,9 @@ export function SiteHeader() {
           </span>
           FairValue
         </Link>
-        <NavLinks className="hidden md:flex" />
+        <Suspense fallback={<NavLinksStatic className="hidden md:flex" />}>
+          <NavLinks className="hidden md:flex" />
+        </Suspense>
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/methodology#data"
@@ -28,7 +31,9 @@ export function SiteHeader() {
           <ThemeToggle />
         </div>
       </div>
-      <NavLinks className="overflow-x-auto px-3 pb-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden" />
+      <Suspense fallback={<NavLinksStatic className="overflow-x-auto px-3 pb-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden" />}>
+        <NavLinks className="overflow-x-auto px-3 pb-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden" />
+      </Suspense>
     </header>
   );
 }

@@ -29,23 +29,39 @@ function config() {
   return { url, key };
 }
 
-export type Params = Record<string, string | number | boolean | undefined>;
+type Value = string | number | boolean | undefined;
+/** PostgREST params. An array repeats the key (e.g. { age: ["gte.20", "lte.23"] } -> age=gte.20&age=lte.23). */
+export type Params = Record<string, Value | Value[]>;
 
-/** GET /rest/v1/{relation}?{params}. Params use PostgREST syntax, e.g. { season: "eq.2024", order: "minutes.desc" }. */
-export async function select<T>(relation: string, params: Params = {}): Promise<T[]> {
+async function request(relation: string, params: Params, count: boolean): Promise<Response> {
   await connection();
   const { url, key } = config();
   const qs = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) if (v !== undefined) qs.set(k, String(v));
+  for (const [k, v] of Object.entries(params)) {
+    for (const item of Array.isArray(v) ? v : [v]) if (item !== undefined && item !== "") qs.append(k, String(item));
+  }
   const headers: Record<string, string> = { apikey: key };
   if (!key.startsWith("sb_")) headers.Authorization = `Bearer ${key}`; // legacy JWT anon keys
+  if (count) headers.Prefer = "count=exact";
   const res = await fetch(`${url}/rest/v1/${relation}?${qs}`, {
     headers,
     cache: "force-cache",
     next: { revalidate: REVALIDATE_SECONDS, tags: ["db"] },
   });
   if (!res.ok) throw new DbQueryError(res.status, await res.text());
-  return (await res.json()) as T[];
+  return res;
+}
+
+/** GET /rest/v1/{relation}?{params}. Params use PostgREST syntax, e.g. { season: "eq.2024", order: "minutes.desc" }. */
+export async function select<T>(relation: string, params: Params = {}): Promise<T[]> {
+  return (await (await request(relation, params, false)).json()) as T[];
+}
+
+/** Like select, plus the total number of matching rows (for pagination). */
+export async function selectPage<T>(relation: string, params: Params = {}): Promise<{ rows: T[]; total: number }> {
+  const res = await request(relation, params, true);
+  const total = Number(res.headers.get("content-range")?.split("/")[1] ?? 0);
+  return { rows: (await res.json()) as T[], total: Number.isFinite(total) ? total : 0 };
 }
 
 export async function selectOne<T>(relation: string, params: Params = {}): Promise<T | null> {

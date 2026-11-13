@@ -110,6 +110,7 @@ def build_tables(base=DATA_DIR) -> dict[str, pd.DataFrame]:
         {"key": "attribution", "value": json.dumps(
             "Transfer and market-value data: Transfermarkt, via the community transfermarkt-datasets project. "
             "xG data: Understat. Non-commercial research project; not affiliated with any club or data provider.")},
+        {"key": "market_premium_by_window", "value": json.dumps(market_premium_series(tf))},
         {"key": "published_at", "value": json.dumps(pd.Timestamp.now(tz="UTC").isoformat(timespec="seconds"))},
     ])  # fmt: skip
 
@@ -131,6 +132,18 @@ def check_primary_keys(tables: dict[str, pd.DataFrame]) -> None:
     dupes = {k: v for k, v in dupes.items() if v}
     if dupes:
         raise ValueError(f"duplicate primary keys: {dupes}")
+
+
+def market_premium_series(tf: pd.DataFrame) -> list[dict]:
+    """Median fee / market value by season and window (paid transfers, value <= 365 days old): the market cycle."""
+    t = tf[tf.F1 & (tf.mv_pit_age_days <= 365) & (tf.fee_eur > 0) & tf.window.isin(["summer", "winter"])].copy()
+    t["ratio"] = t.fee_eur / t.mv_pit_eur
+    g = t.groupby(["season", "window"]).ratio.agg(["median", "size"]).reset_index()
+    g = g[g["size"] >= 30]
+    return [
+        {"season": int(r.season), "window": r.window, "median_ratio": round(float(r["median"]), 4), "n": int(r["size"])}
+        for _, r in g.iterrows()
+    ]
 
 
 def search_name(name: str) -> str:
