@@ -11,6 +11,7 @@ export const NAV = [
   { href: "/transfers", label: "Transfers" },
   { href: "/hidden-gems", label: "Hidden Gems" },
   { href: "/clubs", label: "Clubs" },
+  { href: "/case-studies", label: "Case studies" },
   { href: "/methodology", label: "Methodology" },
 ];
 

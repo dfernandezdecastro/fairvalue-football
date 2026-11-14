@@ -92,3 +92,13 @@ Short records of non-obvious technical decisions: context, decision, consequence
 - **The vocabulary guard has a reviewed escape hatch.** Lines that explain what FairValue does *not* say (e.g. "never calls a transfer 'overpaid'") carry a `vocab-ok` comment. The guard also caught a real slip during development ("most undervalued first" became "largest potential undervaluation first").
 - **Every page streams.** The page header and nav render instantly; data sections stream behind `<Suspense>` (the nav's active state too, since reading the URL needs a boundary). All data routes build as partial prerenders without database credentials.
 - **Outcomes stay visibly separate.** Transfer and club pages show the market value after the move, labelled "observed after the transfer, not used by any model".
+
+## D18. Editorial case studies and the homepage (final polish)
+- **Context:** the product needed worked examples that show how to read its outputs, and a homepage that explains the platform. Hand-written stories drift from the data and invite cherry-picking or hindsight bias.
+- **Decision:**
+  - Three report pages (`/case-studies/*`) read every figure live; narrative sentences are built from those values. Each page lists the facts its narrative relies on, re-checks them on every render (`IntegrityNotice`), and shows a visible warning if any no longer hold.
+  - Subjects were chosen from the data: Mateus Fernandes (2024/25, peer-implied €32M vs €15M market value, High reliability; the gap is mostly age and league, which the report says plainly), Alexander Isak to Newcastle (notable premium, 15 comparables strictly before the deal date), and Eintracht Frankfurt (a screen derived from the club's own purchases before July 2025, giving exactly five players).
+  - Look-ahead is avoided in the narrative too: comparables are dated before the transfer; the club profile is recomputed from pre-cutoff purchases instead of the precomputed audit (which includes later deals); charts in evidence sections stop at the reference season. Everything later sits in a dashed "Hindsight" box labelled "not used by the model", with an explicit no-causation note.
+  - A rejected option: a 2025/26 shortlist (basic data only) returned only €1–2M small-league players, which wasn't credible against the club's profile.
+  - The homepage became a product landing page (hero, platform, live insights, case studies, methodology, CTA); the market-cycle chart moved to Methodology.
+- **Consequence:** the integrity guard caught two real errors during development (a big-five share that ignored uncovered selling leagues, and a loose age cap that widened the screen to ten players), plus a title calling a 20-year-old a teenager. No new models, data or dependencies.

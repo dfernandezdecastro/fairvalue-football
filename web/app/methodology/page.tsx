@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { MarketCycleChart, type CyclePoint } from "@/components/charts/market-cycle";
 import { Table, Td, Th } from "@/components/data/table";
 import { PageSkeleton } from "@/components/shell/page-skeleton";
 import { Card, PageHeader, Section } from "@/components/shell/site-chrome";
-import { select } from "@/lib/db/server";
+import { select, selectOne } from "@/lib/db/server";
 import { seasonLabel } from "@/lib/format";
 import { leagueName, MODEL_LEAGUES } from "@/lib/leagues";
 import { cn } from "@/lib/utils";
@@ -41,10 +42,18 @@ export default function MethodologyPage() {
 }
 
 async function MethodologyBody() {
-  const [runs, coverage] = await Promise.all([
+  const [runs, coverage, cycle] = await Promise.all([
     select<{ model: string; created_at: string; summary: unknown }>("model_runs", { is_current: "eq.true", select: "model,created_at,summary" }),
     select<Coverage>("data_coverage", { select: "*", order: "season" }),
+    selectOne<{ value: { season: number; window: string; median_ratio: number }[] }>("app_meta", { key: "eq.market_premium_by_window", select: "value" }),
   ]);
+  // The data ends on 6 July 2026, so the 2026/27 summer window has barely started: leave it out.
+  const series = (cycle?.value ?? []).filter((p) => p.season <= 2025);
+  const cyclePoints: CyclePoint[] = [...new Set(series.map((p) => p.season))].sort().map((s) => ({
+    season: seasonLabel(s),
+    summer: series.find((p) => p.season === s && p.window === "summer")?.median_ratio ?? null,
+    winter: series.find((p) => p.season === s && p.window === "winter")?.median_ratio ?? null,
+  }));
   const piv = runs.find((r) => r.model === "piv")?.summary as PivSummary | undefined;
   const fee = runs.find((r) => r.model === "expected_fee")?.summary as FeeSummary | undefined;
 
@@ -113,6 +122,14 @@ async function MethodologyBody() {
           re-centred each season on the market&apos;s median (the market became more unequal over time), and a point-in-time league
           market level tracks leagues getting relatively richer or poorer. Full model cards are in the project repository.
         </p>
+        <div id="market-cycle" className="scroll-mt-24 space-y-2 pt-4">
+          <p className="text-sm font-medium">The market cycle</p>
+          <p className="text-sm text-muted-foreground">
+            Median transfer fee as a multiple of the player&apos;s market value just before the move. The level moves with market
+            cycles, which is why the expected-fee model tracks it point in time rather than assuming a fixed premium.
+          </p>
+          <Card><MarketCycleChart data={cyclePoints} /></Card>
+        </div>
       </Section>
 
       <Section title="4. Uncertainty and reliability" description="Ranges come from group-wise split-conformal calibration: the model's real out-of-sample errors in the previous three seasons, per league and position line, give the 80% and 95% bands. Valuation gaps compare players with same-league peers in the same summer, so league-wide market moves aren't mistaken for individual undervaluation.">

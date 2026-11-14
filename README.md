@@ -26,7 +26,7 @@ FairValue compares player market values and transfer fees with what measurable p
 | Performance-implied value, 14 leagues, basic data (gradient boosting) | 35,362 player-seasons | 34.1% | 85.0% | 80.3% |
 | Expected fee (Ridge) | 12,520 transfers | 44.4% | 50.0% (fee = market value) | 81.5% |
 
-**Hidden Gems backtest:** players flagged as potential undervaluation gained **+7.9%** more market value than comparable peers over the next 12 months (80% CI 6.5–11.1%, n = 1,138); "strong signal" flags **+13.9%**; "market premium" players **−3.8%**. Consistent in all 10 seasons tested. Full write-ups: [model cards](reports/models/), [case studies](docs/CASE_STUDIES.md).
+**Hidden Gems backtest:** players flagged as potential undervaluation gained **+7.9%** more market value than comparable peers over the next 12 months (80% CI 6.5–11.1%, n = 1,138); "strong signal" flags **+13.9%**; "market premium" players **−3.8%**. Consistent in all 10 seasons tested. Full write-ups: [model cards](reports/models/), [case studies](docs/CASE_STUDIES.md), and three live reports at [/case-studies](https://fairvalue-football.vercel.app/case-studies).
 
 ## How it's built
 

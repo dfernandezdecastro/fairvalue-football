@@ -28,9 +28,9 @@ function FeeTooltip({ active, payload }: { active?: boolean; payload?: { payload
 }
 
 /** Fee vs expected fee, log-log. Points on the diagonal paid exactly what comparable deals commanded. */
-export function FeeScatter({ points }: { points: FeePoint[] }) {
+export function FeeScatter({ points, highlight }: { points: FeePoint[]; highlight?: FeePoint }) {
   if (points.length < 3) return <p className="text-sm text-muted-foreground">Too few assessed purchases to chart.</p>;
-  const all = points.flatMap((p) => [p.fee, p.expected]);
+  const all = [...points, ...(highlight ? [highlight] : [])].flatMap((p) => [p.fee, p.expected]);
   const domain: [number, number] = [Math.min(...all) / 1.4, Math.max(...all) * 1.4];
   const ticks = logTicks(domain[0], domain[1]);
   const groups = (["discount", "within", "premium"] as const).map((tone) => ({ tone, data: points.filter((p) => p.tone === tone) }));
@@ -50,6 +50,10 @@ export function FeeScatter({ points }: { points: FeePoint[] }) {
           {groups.map((g) => (
             <Scatter key={g.tone} data={g.data} fill={COLOR[g.tone]} isAnimationActive={false} />
           ))}
+          {highlight && (
+            <Scatter data={[highlight]} fill="var(--brand)" shape="diamond" isAnimationActive={false}
+                     legendType="none" />
+          )}
         </ScatterChart>
       </ResponsiveContainer>
     </div>

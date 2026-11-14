@@ -95,6 +95,11 @@
 - Portfolio README with results and architecture; `docs/CASE_STUDIES.md` (Mitrović premium, Athletic Club convention, Hidden Gems hits and misses); `docs/DEPLOY.md`.
 - **Deployed (2026-11-13):** https://fairvalue-football.vercel.app (Vercel Hobby, root directory `web`, two public read-only env vars). The first deploy lacked the env vars (pages showed the "not configured" state); fixed by adding them and redeploying. Live check: all 8 main routes return 200 with real data (~0.8–1.9 s cold), search works ("mbappe" finds both), robots and icon served.
 
+### 2026-11-14: Final product and storytelling polish
+- Three live case studies at `/case-studies` (player valuation: Mateus Fernandes; transfer evaluation: Isak to Newcastle; club recruitment: Eintracht Frankfurt), each A–E with a separated Hindsight box, limitations and a live integrity check of its narrative facts (D18).
+- Homepage rebuilt as a landing page (hero with two CTAs, four capabilities, live featured insights, case studies, methodology and credibility, final CTA); market-cycle chart moved to Methodology; "Case studies" added to the nav.
+- Verified: lint, vocabulary guard, typecheck, build without credentials; all routes 200 and 74 internal links resolve; no horizontal overflow at 375 px; integrity checks all pass (6, 10 and 8 facts).
+
 ## Status: MVP complete (Steps 1–9).
 
 ### After the MVP
