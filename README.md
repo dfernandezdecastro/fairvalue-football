@@ -89,3 +89,7 @@ cd web && npm install && npm run dev   # http://localhost:3000
 ```
 
 Progress log: [PROGRESS.md](PROGRESS.md).
+
+## License
+
+Code and documentation: [MIT](LICENSE). The license does not cover football data: anything obtained by running the pipeline, and anything derived from it (including the live site), stays under its providers' non-commercial terms. See [DATA_SOURCES.md](DATA_SOURCES.md).
