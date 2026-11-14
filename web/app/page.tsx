@@ -41,6 +41,9 @@ export default function Home() {
             the same market, and shows how certain each comparison is. Built on fourteen seasons of historical data, validated
             on seasons the models never saw.
           </p>
+          <p className="text-sm text-muted-foreground">
+            By <span className="font-medium text-foreground">Diego Fernandez de Castro</span>
+          </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link href="/players" className={cn(buttonVariants({ size: "lg" }), "h-10 px-4")}>
