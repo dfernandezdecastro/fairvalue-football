@@ -1,0 +1,13 @@
+FairValue Football: data notice
+
+The MIT license in LICENSE covers the source code and documentation in this repository only.
+It does not cover any football data, and it grants no rights to it.
+
+- No raw third-party data is included in this repository.
+- Data obtained by running the pipeline (from Transfermarkt, via the community
+  transfermarkt-datasets project, and from Understat) and any outputs derived
+  from it, including the published database and the live website, remain
+  subject to their providers' own terms. In particular, they may be used for
+  non-commercial purposes only and must carry attribution.
+
+See DATA_SOURCES.md for sources, terms and attribution requirements.
